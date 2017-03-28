@@ -8,9 +8,9 @@
 #include <stdio.h>
 #include "main.h"
 
-int main (void)
-{
-	/* System Initialization */
+int main (void) {
+
+	// System Init
 	sysclk_init();
 	initialize_board();
 	
@@ -25,10 +25,13 @@ int main (void)
 	gpio_clr_gpio_pin(BLUE_LED_PIN);
 	gpio_set_gpio_pin(RED_LED_PIN);
 	
-	/* Application Code */
+int i = 0;
+	// Main loop
 	while(1) {
 		gpio_tgl_gpio_pin(BLUE_LED_PIN);
 		gpio_tgl_gpio_pin(RED_LED_PIN);
+		print_usb_debug(i);
+		i++
 		delay_ms(500);
 	}
 }

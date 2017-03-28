@@ -1,4 +1,4 @@
-/*
+/**
  * initialize_board.c
  *
  * Created: Mar 26, 2017 5:03:53 PM
@@ -7,8 +7,8 @@
 #include <asf.h>
 #include "main.h"
 
+// GPIO Module init
 void init_gpio() {
-	// Initializing GPIO Module:
 	/*
 		--PORT A--
 		GPER: -32- 0011 0000 0111 0010
@@ -44,8 +44,9 @@ void init_gpio() {
 	gpio_portB->pmr1 = 0xC00;
 }
 
+// USART init
 void init_usarts() {
-	// USART options.
+
 	//RFD900
 	static const usart_options_t USART0_OPTIONS =
 	{
@@ -55,6 +56,7 @@ void init_usarts() {
 		.stopbits     = USART_1_STOPBIT,
 		.channelmode  = USART_NORMAL_CHMODE
 	};
+
 	//Iridium
 	static const usart_options_t USART1_OPTIONS =
 	{
@@ -64,6 +66,7 @@ void init_usarts() {
 		.stopbits     = USART_1_STOPBIT,
 		.channelmode  = USART_NORMAL_CHMODE
 	};
+
 	//GPS
 	static const usart_options_t USART2_OPTIONS =
 	{
@@ -79,6 +82,7 @@ void init_usarts() {
 	usart_init_rs232(&AVR32_USART2, &USART2_OPTIONS, 24000000);
 }
 
+// I2C init
 void init_i2c(void)
 {
 	twi_master_options_t opt = {
@@ -88,6 +92,7 @@ void init_i2c(void)
 	twi_master_setup(&AVR32_TWI, &opt);
 }
 
+// Board init
 void initialize_board() {
 	init_gpio();
 	init_usarts();
