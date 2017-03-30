@@ -17,6 +17,7 @@ int main (void) {
 	usart_write_line(&AVR32_USART1, "Hello, this is the AVR UC3 MCU saying hello!\r\n");
 	println_usb_debug("Initialized Board.");
 	
+	//this
 	char system_clock[10];
 	sprintf(system_clock, "%d", sysclk_get_main_hz());
 	print_usb_debug("The system clock is: ");
