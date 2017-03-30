@@ -31,7 +31,7 @@ int i = 0;
 		gpio_tgl_gpio_pin(BLUE_LED_PIN);
 		gpio_tgl_gpio_pin(RED_LED_PIN);
 		print_usb_debug(i);
-		i++
+		i++;
 		delay_ms(500);
 	}
 }
