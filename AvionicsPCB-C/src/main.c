@@ -26,6 +26,24 @@ int main (void) {
 	gpio_clr_gpio_pin(BLUE_LED_PIN);
 	gpio_set_gpio_pin(RED_LED_PIN);
 	
+	uint8_t data_received;
+	twi_package_t packet_read = {
+		.addr         = BMP_DEVICE_ID_REG,      // TWI slave memory address data
+		.addr_length  = 1,    // TWI slave memory address data size
+		.chip         = ALTIMETER_I2C_ADDR,      // TWI slave bus address
+		.buffer       = data_received,        // transfer data destination buffer
+		.length       = 1                    // transfer data size (bytes)
+	};
+	// Perform a multi-byte read access then check the result.
+	if(twi_master_read(&AVR32_TWI, &packet_read) == TWI_SUCCESS){
+		gpio_tgl_gpio_pin(BLUE_LED_PIN);
+		delay_ms(50);
+		gpio_tgl_gpio_pin(BLUE_LED_PIN);
+		delay_ms(50);
+		gpio_tgl_gpio_pin(BLUE_LED_PIN);
+		delay_ms(50);
+	}
+	
 int i = 0;
 	// Main loop
 	while(1) {
@@ -33,10 +51,6 @@ int i = 0;
 		gpio_tgl_gpio_pin(RED_LED_PIN);
 		print_usb_debug(i);
 		i++;
-<<<<<<< HEAD
-		delay_ms(i % 500);
-=======
 		delay_ms(500);
->>>>>>> origin/master
 	}
 }

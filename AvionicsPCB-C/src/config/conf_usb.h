@@ -61,9 +61,9 @@
 #define  USB_DEVICE_PRODUCT_ID            USB_PID_ATMEL_ASF_CDC
 #define  USB_DEVICE_MAJOR_VERSION         1
 #define  USB_DEVICE_MINOR_VERSION         0
-#define  USB_DEVICE_POWER                 1000 // Consumption on Vbus line (mA)
-#define  USB_DEVICE_ATTR                  \
-	(USB_CONFIG_ATTR_SELF_POWERED)
+#define  USB_DEVICE_POWER                 500 // Consumption on Vbus line (mA)
+#define  USB_DEVICE_ATTR                  (USB_CONFIG_ATTR_BUS_POWERED)
+//	(USB_CONFIG_ATTR_SELF_POWERED)
 // (USB_CONFIG_ATTR_BUS_POWERED)
 // (USB_CONFIG_ATTR_REMOTE_WAKEUP|USB_CONFIG_ATTR_SELF_POWERED)
 // (USB_CONFIG_ATTR_REMOTE_WAKEUP|USB_CONFIG_ATTR_BUS_POWERED)
@@ -71,7 +71,7 @@
 //! USB Device string definitions (Optional)
 #define  USB_DEVICE_MANUFACTURE_NAME      "Ryerson Rocketry"
 #define  USB_DEVICE_PRODUCT_NAME          "Avionics Board"
-//#define  USB_DEVICE_SERIAL_NAME           "2.0"
+#define  USB_DEVICE_SERIAL_NAME           "12AAF"
 
 
 /**
@@ -121,7 +121,7 @@
  */
 
 //! Number of communication port used (1 to 3)
-#define  UDI_CDC_PORT_NB 1
+#define  UDI_CDC_PORT_NB 2
 
 //! Interface callback definition
 #define  UDI_CDC_ENABLE_EXT(port)          true
@@ -132,10 +132,10 @@
 #define  UDI_CDC_SET_DTR_EXT(port,set)
 #define  UDI_CDC_SET_RTS_EXT(port,set)
 
-// #define UDI_CDC_ENABLE_EXT(port) my_callback_cdc_enable()
-// extern bool my_callback_cdc_enable(void);
-// #define UDI_CDC_DISABLE_EXT(port) my_callback_cdc_disable()
-// extern void my_callback_cdc_disable(void);
+#define UDI_CDC_ENABLE_EXT(port) my_callback_cdc_enable()
+extern bool my_callback_cdc_enable(void);
+#define UDI_CDC_DISABLE_EXT(port) my_callback_cdc_disable()
+extern void my_callback_cdc_disable(void);
 // #define  UDI_CDC_RX_NOTIFY(port) my_callback_rx_notify(port)
 // extern void my_callback_rx_notify(uint8_t port);
 // #define  UDI_CDC_TX_EMPTY_NOTIFY(port) my_callback_tx_empty_notify(port)

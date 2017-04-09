@@ -92,6 +92,17 @@ void init_i2c(void)
 	twi_master_setup(&AVR32_TWI, &opt);
 }
 
+static bool my_flag_autorize_cdc_transfert = false;
+bool my_callback_cdc_enable(void)
+{
+	my_flag_autorize_cdc_transfert = true;
+	return true;
+}
+void my_callback_cdc_disable(void)
+{
+	my_flag_autorize_cdc_transfert = false;
+}
+
 // Board init
 void initialize_board() {
 	init_gpio();
@@ -104,4 +115,5 @@ void initialize_board() {
 	
 	// Start USB stack to authorize VBus monitoring
 	udc_start();
+	my_callback_cdc_enable();
 }

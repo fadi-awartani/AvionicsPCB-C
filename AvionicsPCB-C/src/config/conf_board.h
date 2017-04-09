@@ -67,4 +67,7 @@
 #define NANOPI_I2C_ADDR			0x0 //PUT IN CORRECT ADDRESS
 #define PAYLOAD_I2C_ADDR		0x0 //PUT IN CORRECT ADDRESS
 
+// BMP280 (Altimeter) Register Addresses
+#define BMP_DEVICE_ID_REG		0xD0
+
 #endif // CONF_BOARD_H
