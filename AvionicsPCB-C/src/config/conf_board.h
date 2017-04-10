@@ -61,7 +61,7 @@
 #define GPS_USART				AVR32_USART2
 
 // I2C Configuration
-#define I2C_SPEED				48000
+#define I2C_SPEED				50000
 #define ALTIMETER_I2C_ADDR		0x77
 #define IMU_I2C_ADDR			0b1101011
 #define NANOPI_I2C_ADDR			0x0 //PUT IN CORRECT ADDRESS
@@ -69,5 +69,8 @@
 
 // BMP280 (Altimeter) Register Addresses
 #define BMP_DEVICE_ID_REG		0xD0
+
+// Imu
+#define WHO_AM_I_ADDR			0x0F
 
 #endif // CONF_BOARD_H
