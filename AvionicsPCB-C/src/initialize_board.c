@@ -157,7 +157,7 @@ void init_pwm() {
 void initialize_board() {
 	init_gpio();
 	init_usarts();
-	init_i2c();
+	//init_i2c();
 	init_pwm();
 	
 	// Initialize and enable interrupts
@@ -167,4 +167,10 @@ void initialize_board() {
 	// Start USB stack to authorize VBus monitoring
 	udc_start();
 	my_callback_cdc_enable();
+	
+	//Testing I2C for altimeter
+	(*AVR32_TWI).cr = 0x27;//0000 0000 0000 0000 0000 0000 0010 0111 
+	(*AVR32_TWI).iadr = BMP_DEVICE_ID_REG;
+	(*AVR32_TWI).cwgr = (246 << 8) | 246; //period of (1/96000) for low clock, same for high, should be 48000 Hz clock for I2C
+	(*AVR32_TWI).mmr = (ALTIMETER_I2C_ADDR << 16) | 0x1100; //0001 0001 0000 0000
 }
