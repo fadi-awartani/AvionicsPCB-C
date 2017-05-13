@@ -7,7 +7,7 @@
 #include <asf.h>
 #include <stdio.h>
 #include "main.h"
-
+int result;
 int main (void) {
 
 	// System Init
@@ -37,6 +37,22 @@ int main (void) {
 	
 	// Perform a multi-byte read access then check the result.
 	twi_master_read(&AVR32_TWI, &packet_read);*/
+	
+	//Testing I2C for altimeter -- Read Microcontroller datasheet, TWI chapter (User interface section), to find out what this means.
+	(AVR32_TWI).iadr = WHO_AM_I_ADDR;
+	(AVR32_TWI).cwgr = (246 << 8) | 246; //period of (1/96000) for low clock, same for high, should be 48000 Hz clock for I2C
+	(AVR32_TWI).mmr = (IMU_I2C_ADDR << 16) | 0x1100; //0001 0001 0000 0000
+	(AVR32_TWI).cr = 0x27;//0000 0000 0000 0000 0000 0000 0010 0111
+	
+	result = (AVR32_TWI).rhr;
+	
+	(AVR32_TWI).iadr = 0xF8;
+	(AVR32_TWI).cr = 0x27;
+	result = (AVR32_TWI).rhr;
+	
+	(AVR32_TWI).iadr = 0xF7;
+	(AVR32_TWI).cr = 0x27;
+	result = (AVR32_TWI).rhr;
 	
 int i = 0;
 	// Main loop

@@ -38,6 +38,7 @@ void init_gpio() {
 	gpio_portA->gper = 0x30320000UL;
 	gpio_portA->pmr0 = 0x0C002000UL;
 	gpio_portA->pmr1 = 0x1E0;
+	gpio_portA->puers = 0x600;//Enable pullup on I2C lines
 	
 	gpio_portB->gper = 0x3CF;
 	gpio_portB->pmr0 = 0;
@@ -168,9 +169,5 @@ void initialize_board() {
 	udc_start();
 	my_callback_cdc_enable();
 	
-	//Testing I2C for altimeter
-	(*AVR32_TWI).cr = 0x27;//0000 0000 0000 0000 0000 0000 0010 0111 
-	(*AVR32_TWI).iadr = BMP_DEVICE_ID_REG;
-	(*AVR32_TWI).cwgr = (246 << 8) | 246; //period of (1/96000) for low clock, same for high, should be 48000 Hz clock for I2C
-	(*AVR32_TWI).mmr = (ALTIMETER_I2C_ADDR << 16) | 0x1100; //0001 0001 0000 0000
+	
 }
