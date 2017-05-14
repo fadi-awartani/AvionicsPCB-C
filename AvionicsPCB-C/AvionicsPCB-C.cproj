@@ -525,6 +525,9 @@
     <Compile Include="src\ASF\common\services\usb\udc\udc.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\i2c.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\initialize_board.c">
       <SubType>compile</SubType>
     </Compile>
