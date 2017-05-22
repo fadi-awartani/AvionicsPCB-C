@@ -7,6 +7,20 @@
 #include <asf.h>
 #include "main.h"
 
+#if defined (__GNUC__)
+__attribute__((__interrupt__))
+#elif defined(__ICCAVR32__)
+__interrupt
+#endif
+static void read_gps_byte() {
+	int val;
+	char c;
+	
+	usart_read_char(&AVR32_USART1, &val);
+	c = (char) val;
+	gps_processChar(c);
+}
+
 // GPIO Module init
 void init_gpio() {
 	/*
@@ -78,10 +92,23 @@ void init_usarts() {
 		.channelmode  = USART_NORMAL_CHMODE
 	};
 	
-	usart_init_hw_handshaking(&AVR32_USART0, &USART0_OPTIONS, 24000000);
+	//usart_init_hw_handshaking(&AVR32_USART0, &USART0_OPTIONS, 24000000);
+	usart_init_rs232(&AVR32_USART0, &USART0_OPTIONS, 24000000);
 	//usart_init_modem(&AVR32_USART1, &USART1_OPTIONS, 24000000); //For Iridium. make sure to swap tx/rx pins on board first :(
 	usart_init_rs232(&AVR32_USART1, &USART1_OPTIONS, 24000000);
 	usart_init_rs232(&AVR32_USART2, &USART2_OPTIONS, 24000000);
+	
+	// Disable all interrupts.
+	Disable_global_interrupt();
+
+	// Initialize interrupt vectors.
+	INTC_init_interrupts();
+	
+	INTC_register_interrupt(&read_gps_byte, AVR32_USART1_IRQ, AVR32_INTC_INT0);
+	
+	AVR32_USART1.ier = AVR32_USART_IER_RXRDY_MASK;
+	
+	Enable_global_interrupt();
 }
 
 // I2C init
