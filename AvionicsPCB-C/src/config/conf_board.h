@@ -69,6 +69,15 @@
 
 // BMP280 (Altimeter) Register Addresses
 #define BMP_DEVICE_ID_REG		0xD0
+#define BMP_RESET_REG			0xE0
+#define BMP_CTRL_MEAS_REG		0xF4
+#define BMP_CONFIG_REG			0xF5
+#define BMP_PRESS_MSB_REG		0xF7
+#define BMP_PRESS_LSB_REG		0xF8
+#define BMP_PRESS_XLSB_REG		0xF9
+#define BMP_TEMP_MSB_REG		0xFA
+#define BMP_TEMP_LSB_REG		0xFB
+#define BMP_TEMP_XLSB_REG		0xFC
 
 // Imu
 #define WHO_AM_I_ADDR			0x0F
