@@ -78,6 +78,30 @@
 #define BMP_TEMP_MSB_REG		0xFA
 #define BMP_TEMP_LSB_REG		0xFB
 #define BMP_TEMP_XLSB_REG		0xFC
+#define BMP_DIG_T1_LSB_REG		0x88
+#define BMP_DIG_T1_MSB_REG		0x89
+#define BMP_DIG_T2_LSB_REG		0x8A
+#define BMP_DIG_T2_MSB_REG		0x8B
+#define BMP_DIG_T3_LSB_REG		0x8C
+#define BMP_DIG_T3_MSB_REG		0x8D
+#define BMP_DIG_P1_LSB_REG		0x8E
+#define BMP_DIG_P1_MSB_REG		0x8F
+#define BMP_DIG_P2_LSB_REG		0x90
+#define BMP_DIG_P2_MSB_REG		0x91
+#define BMP_DIG_P3_LSB_REG		0x92
+#define BMP_DIG_P3_MSB_REG		0x93
+#define BMP_DIG_P4_LSB_REG		0x94
+#define BMP_DIG_P4_MSB_REG		0x95
+#define BMP_DIG_P5_LSB_REG		0x96
+#define BMP_DIG_P5_MSB_REG		0x97
+#define BMP_DIG_P6_LSB_REG		0x98
+#define BMP_DIG_P6_MSB_REG		0x99
+#define BMP_DIG_P7_LSB_REG		0x9A
+#define BMP_DIG_P7_MSB_REG		0x9B
+#define BMP_DIG_P8_LSB_REG		0x9C
+#define BMP_DIG_P8_MSB_REG		0x9D
+#define BMP_DIG_P9_LSB_REG		0x9E
+#define BMP_DIG_P9_MSB_REG		0x9F
 
 // Imu
 #define WHO_AM_I_ADDR			0x0F
