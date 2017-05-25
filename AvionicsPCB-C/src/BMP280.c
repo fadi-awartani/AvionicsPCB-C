@@ -23,24 +23,33 @@ int32_t dig_P7 = 0;
 int32_t dig_P8 = 0;
 int32_t dig_P9 = 0;
 
+//Variable used to measure pressure, derived from the temperature measurement
+//PLEASE READ TEMPERATURE BEFORE PRESSURE AS PRESSURE IS DEPENDENT ON TEMPERATURE
 int32_t t_fine = 0;
 
 
 //Set up the BMP280 pressure sensor
 void bmp_setup (){
+
 	//Reset the registers
 	uint8_t dat = 0xB6;
 	send_i2c_bytes(ALTIMETER_I2C_ADDR, BMP_RESET_REG, &dat,1);
 	
+
 	
 	//Set the resolution and measuring mode
 	//pressure x16, temperature x2 and normal mode
 	dat = 0x54;
 	send_i2c_bytes(ALTIMETER_I2C_ADDR,BMP_CTRL_MEAS_REG,&dat,1);
 	
+
+
 	//Set the standby time IIR coefficient and disable SPI
 	dat = 0x04;
 	send_i2c_bytes(ALTIMETER_I2C_ADDR,BMP_CONFIG_REG,&dat,1);
+
+
+
 
 	//Set up calibration values
 	uint32_t u_cal[2];
@@ -72,19 +81,6 @@ void bmp_setup (){
 	
 }
 
-//Read pressure from BMP280 sensor
-void bmp_read_pressure(){
-	
-	//Get pressure value from register
-	uint8_t pressure_mes[3];
-	read_i2c_bytes(ALTIMETER_I2C_ADDR,BMP_PRESS_MSB_REG,pressure_mes,3);
-	
-	pressure = (pressure_mes[0]<<12) ^ (pressure_mes[1]<<4) ^ pressure_mes[2];
-
-	pressure = bmp280_compensate_P_int64((int32_t)pressure);
-	
-}
-
 //Read temperature from BMP280 sensor
 void bmp_read_temperature(){
 	//Get temperature value from register
@@ -98,6 +94,27 @@ void bmp_read_temperature(){
 	
 }
 
+
+//Read pressure from BMP280 sensor
+//PLEASE READ TEMPERATURE BEFORE PRESSURE AS PRESSURE IS DEPENDENT ON TEMPERATURE
+void bmp_read_pressure(){
+	
+	//Get pressure value from register
+	uint8_t pressure_mes[3];
+	read_i2c_bytes(ALTIMETER_I2C_ADDR,BMP_PRESS_MSB_REG,pressure_mes,3);
+	
+	pressure = (pressure_mes[0]<<12) ^ (pressure_mes[1]<<4) ^ pressure_mes[2];
+
+	pressure = bmp280_compensate_P_int64((int32_t)pressure);
+	
+}
+
+
+
+
+//Compensation code for the temperature
+//adc_T: Uncompensated temperature
+//return: compensated temperature using calibration register values
 uint32_t bmp280_compensate_T_int32(int32_t adc_T) {  
 	int32_t var1, var2, T;  
 	var1  = ((((adc_T>>3) - ((int32_t)dig_T1<<1))) * ((int32_t)dig_T2)) >> 11;  var2  = (((((adc_T>>4)  ((int32_t)dig_T1)) * ((adc_T>>4) - ((int32_t)dig_T1))) >> 12)*((int32_t)dig_T3)) >> 14;  
@@ -106,6 +123,9 @@ uint32_t bmp280_compensate_T_int32(int32_t adc_T) {
 	return (uint32_t)T; 
 }
 
+//Compensation code for the pressure
+//adc_P: Uncompensated pressure
+//return: compensated pressure using calibration register values
 uint32_t bmp280_compensate_P_int64(int32_t adc_P) {
 	int64_t var1, var2, p;  
 	var1 = ((int64_t)t_fine) - 128000;  
@@ -128,6 +148,7 @@ uint32_t bmp280_compensate_P_int64(int32_t adc_P) {
 
 
 
+//****************************************************Getters*************************************************
 
 uint32_t getPressure(){
 	
