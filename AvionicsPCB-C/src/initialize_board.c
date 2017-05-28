@@ -16,9 +16,11 @@ static void read_gps_byte() {
 	int val;
 	char c;
 	
-	usart_read_char(&AVR32_USART1, &val);
+	usart_read_char(&GPS_USART, &val);
 	c = (char) val;
 	gps_processChar(c);
+	GPS_USART.idr = 1;
+	GPS_USART.ier = 1;
 }
 
 // GPIO Module init
@@ -54,9 +56,11 @@ void init_gpio() {
 	gpio_portA->pmr1 = 0x1E0;
 	gpio_portA->puers = 0x600;//Enable pullup on I2C lines
 	
-	gpio_portB->gper = 0x3CF;
-	gpio_portB->pmr0 = 0;
-	gpio_portB->pmr1 = 0xC00;
+	gpio_portB->gper = 0xFCF;//change to 0x3CF
+	gpio_portB->pmr0 = 0;//keep
+	gpio_portB->oder = 0xC00;
+	gpio_portB->ovr = 0xC00;
+	//gpio_portB->pmr1 = 0xC00;
 }
 
 // USART init
@@ -104,9 +108,9 @@ void init_usarts() {
 	// Initialize interrupt vectors.
 	INTC_init_interrupts();
 	
-	INTC_register_interrupt(&read_gps_byte, AVR32_USART1_IRQ, AVR32_INTC_INT0);
+	INTC_register_interrupt(&read_gps_byte, GPS_USART_IRQ, AVR32_INTC_INT0);
 	
-	AVR32_USART1.ier = AVR32_USART_IER_RXRDY_MASK;
+	GPS_USART.ier = AVR32_USART_IER_RXRDY_MASK;
 	
 	Enable_global_interrupt();
 }
@@ -181,20 +185,30 @@ void init_pwm() {
 	//pwm_start_channels(1 << BUZZER_PWM);
 }
 
+void init_watchdog() {
+	AVR32_WDT.ctrl = 0x55001501;
+	AVR32_WDT.ctrl = 0xAA001501;
+}
+
+void update_watchdog() {
+	AVR32_WDT.clr = 0xFFFFFFFF;
+}
+
 // Board init
 void initialize_board() {
-	init_gpio();
-	init_usarts();
-	//init_i2c();
-	init_pwm();
-	
 	// Initialize and enable interrupts
 	irq_initialize_vectors();
 	cpu_irq_enable();
 	
+	init_gpio();
+	init_usarts();
+	//init_i2c();
+	init_pwm();
+	init_watchdog();
+
+	
 	// Start USB stack to authorize VBus monitoring
 	udc_start();
 	my_callback_cdc_enable();
-	
 	
 }
