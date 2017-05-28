@@ -5,7 +5,7 @@
  *  Author: agsof
  */ 
 
-#include "main.h"
+#include "main.h" /*
 //Values to measure
 uint32_t pressure = 0;
 uint32_t temperature = 0;
@@ -158,4 +158,4 @@ uint32_t getPressure(){
 uint32_t getTemperature(){
 	
 	return temperature;
-}
+}*/

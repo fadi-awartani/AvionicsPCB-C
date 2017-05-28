@@ -28,7 +28,7 @@ void gps_processChar(char c) {
 	gps_line[gps_index++ % MINMEA_MAX_LENGTH] = c;
 	
 	if(c == '\n') {
-		gps_line[gps_index++ % 64] = '\0';
+		gps_line[gps_index++ % MINMEA_MAX_LENGTH] = '\0';
 		gps_index = 0;
 		sentenceDone = 1;
 	}

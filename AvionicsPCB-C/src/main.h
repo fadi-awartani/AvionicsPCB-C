@@ -22,6 +22,8 @@ char gen_string[128];
 
 //#define GPSLINE_NUMCHARS 128
 
+extern void update_watchdog();
+
 extern void print_usb_debug(char* message);
 extern void println_usb_debug(char* message);
 extern int send_i2c_bytes(uint8_t device_address, uint8_t internal_address, uint8_t *data_bytes, int len);
