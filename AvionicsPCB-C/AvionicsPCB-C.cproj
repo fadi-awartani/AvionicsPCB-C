@@ -536,6 +536,9 @@
     <Compile Include="src\i2c.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\IMU.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\initialize_board.c">
       <SubType>compile</SubType>
     </Compile>

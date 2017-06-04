@@ -8,7 +8,8 @@
 #include "main.h" /*
 //Values to measure
 uint32_t pressure = 0;
-uint32_t temperature = 0;
+int32_t temperature = 0;
+
 //Calibration variables
 uint32_t dig_T1 = 0;
 int32_t dig_T2 = 0;
@@ -65,15 +66,15 @@ void bmp_setup (){
 	dig_P1 = (u_cal[0]<<8) ^ u_cal[1];
 
 	int32_t calP[16]; 
-	read_i2c_bytes(ALTIMETER_I2C_ADDR,BMP_DIG_P2_LSB_REG,cal,4);
-	dig_P2 = (cal[0]<<8) ^ cal[1];
-	dig_P3 = (cal[2]<<8) ^ cal[3];
-	dig_P4 = (cal[4]<<8) ^ cal[5];
-	dig_P5 = (cal[6]<<8) ^ cal[7];
-	dig_P6 = (cal[8]<<8) ^ cal[9];
-	dig_P7 = (cal[10]<<8) ^ cal[11];
-	dig_P8 = (cal[12]<<8) ^ cal[13];
-	dig_P9 = (cal[14]<<8) ^ cal[15];
+	read_i2c_bytes(ALTIMETER_I2C_ADDR,BMP_DIG_P2_LSB_REG,calP,16);
+	dig_P2 = (calP[0]<<8) ^ calP[1];
+	dig_P3 = (calP[2]<<8) ^ calP[3];
+	dig_P4 = (calP[4]<<8) ^ calP[5];
+	dig_P5 = (calP[6]<<8) ^ calP[7];
+	dig_P6 = (calP[8]<<8) ^ calP[9];
+	dig_P7 = (calP[10]<<8) ^ calP[11];
+	dig_P8 = (calP[12]<<8) ^ calP[13];
+	dig_P9 = (calP[14]<<8) ^ calP[15];
 
 
 
@@ -84,7 +85,7 @@ void bmp_setup (){
 //Read temperature from BMP280 sensor
 void bmp_read_temperature(){
 	//Get temperature value from register
-	uint8_t *temperature_mes;
+	uint8_t temperature_mes[3];
 	read_i2c_bytes(ALTIMETER_I2C_ADDR,BMP_PRESS_MSB_REG,temperature_mes,3);
 	
 	temperature = (temperature_mes[0]<<9) ^ (temperature_mes[1]<<1) ^ temperature_mes[2];
@@ -106,6 +107,8 @@ void bmp_read_pressure(){
 	pressure = (pressure_mes[0]<<12) ^ (pressure_mes[1]<<4) ^ pressure_mes[2];
 
 	pressure = bmp280_compensate_P_int64((int32_t)pressure);
+
+	
 	
 }
 
@@ -117,10 +120,11 @@ void bmp_read_pressure(){
 //return: compensated temperature using calibration register values
 uint32_t bmp280_compensate_T_int32(int32_t adc_T) {  
 	int32_t var1, var2, T;  
-	var1  = ((((adc_T>>3) - ((int32_t)dig_T1<<1))) * ((int32_t)dig_T2)) >> 11;  var2  = (((((adc_T>>4)  ((int32_t)dig_T1)) * ((adc_T>>4) - ((int32_t)dig_T1))) >> 12)*((int32_t)dig_T3)) >> 14;  
+	var1  = ((((adc_T>>3) - ((int32_t)dig_T1<<1))) * ((int32_t)dig_T2)) >> 11;  
+	var2 = (((((adc_T>>4) - ((int32_t)dig_T1))*((adc_T>>4)-((int32_t)dig_T1)))>>12)*((int32_t)dig_T3))>>14;
 	t_fine = var1 + var2;
 	T  = (t_fine * 5 + 128) >> 8;
-	return (uint32_t)T; 
+	return T; 
 }
 
 //Compensation code for the pressure
