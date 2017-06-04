@@ -16,6 +16,7 @@ extern void initialize_board();
 char gen_string[128];
 
 
+//#define EN_USB
 
 //End characters for println.
 #define ENDCHARS "\r\n"
@@ -24,8 +25,11 @@ char gen_string[128];
 
 extern void update_watchdog();
 
+#ifdef EN_USB
 extern void print_usb_debug(char* message);
 extern void println_usb_debug(char* message);
+#endif
+
 extern int send_i2c_bytes(uint8_t device_address, uint8_t internal_address, uint8_t *data_bytes, int len);
 extern int read_i2c_bytes(uint8_t device_address, uint8_t internal_address, uint8_t *data_bytes, int len);
 //extern void read_gps_byte();

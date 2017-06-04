@@ -56,11 +56,11 @@ void init_gpio() {
 	gpio_portA->pmr1 = 0x1E0;
 	gpio_portA->puers = 0x600;//Enable pullup on I2C lines
 	
-	gpio_portB->gper = 0xFCF;//change to 0x3CF
+	gpio_portB->gper = 0x3CF;//change to 0x3CF
 	gpio_portB->pmr0 = 0;//keep
-	gpio_portB->oder = 0xC00;
-	gpio_portB->ovr = 0xC00;
-	//gpio_portB->pmr1 = 0xC00;
+	//gpio_portB->oder = 0xC00;
+	//gpio_portB->ovr = 0xC00;
+	gpio_portB->pmr1 = 0xC00;
 }
 
 // USART init
@@ -208,7 +208,8 @@ void initialize_board() {
 
 	
 	// Start USB stack to authorize VBus monitoring
+	#ifdef EN_USB
 	udc_start();
 	my_callback_cdc_enable();
-	
+	#endif
 }
