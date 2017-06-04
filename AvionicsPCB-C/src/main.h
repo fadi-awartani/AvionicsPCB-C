@@ -49,4 +49,13 @@ extern int gpsAlt();
 extern long gpsTime();
 extern int isDataReady();
 
+//BMP280
+extern void bmp_setup ();
+extern void bmp_read_temperature();
+extern void bmp_read_pressure();
+extern uint32_t bmp280_compensate_T_int32(int32_t adc_T);
+extern uint32_t bmp280_compensate_P_int64(int32_t adc_P);
+extern uint32_t getPressure();
+extern uint32_t getTemperature();
+
 #endif /* MAIN_H_ */
