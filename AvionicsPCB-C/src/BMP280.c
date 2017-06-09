@@ -7,21 +7,12 @@
 
 #include "main.h"
 //Values to measure
-uint32_t pressure = 0;
-int32_t temperature = 0;
+uint32_t recent_pres = 0;
+int32_t recent_temp = 0;
+
 //Calibration variables
-uint32_t dig_T1 = 0;
-int32_t dig_T2 = 0;
-int32_t dig_T3 = 0;
-uint32_t dig_P1 = 0;
-int32_t dig_P2 = 0;
-int32_t dig_P3 = 0;
-int32_t dig_P4 = 0;
-int32_t dig_P5 = 0;
-int32_t dig_P6 = 0;
-int32_t dig_P7 = 0;
-int32_t dig_P8 = 0;
-int32_t dig_P9 = 0;
+uint32_t dig_T1 = 0; int32_t dig_T2 = 0, dig_T3 = 0;
+uint32_t dig_P1 = 0; int32_t dig_P2 = 0, dig_P3 = 0, dig_P4 = 0, dig_P5 = 0, dig_P6 = 0, dig_P7 = 0, dig_P8 = 0, dig_P9 = 0;
 
 //Variable used to measure pressure, derived from the temperature measurement
 //PLEASE READ TEMPERATURE BEFORE PRESSURE AS PRESSURE IS DEPENDENT ON TEMPERATURE
@@ -35,59 +26,47 @@ void bmp_setup (){
 	uint8_t dat = 0xB6;
 	send_i2c_bytes(ALTIMETER_I2C_ADDR, BMP_RESET_REG, &dat,1);
 	
-
-	
 	//Set the resolution and measuring mode
 	//pressure x16, temperature x2 and normal mode
 	dat = 0x54;
 	send_i2c_bytes(ALTIMETER_I2C_ADDR,BMP_CTRL_MEAS_REG,&dat,1);
 	
-
-
 	//Set the standby time IIR coefficient and disable SPI
 	dat = 0x04;
 	send_i2c_bytes(ALTIMETER_I2C_ADDR,BMP_CONFIG_REG,&dat,1);
 
-
-
-
 	//Set up calibration values
 	uint32_t u_cal[2];
 	read_i2c_bytes(ALTIMETER_I2C_ADDR,BMP_DIG_T1_LSB_REG,u_cal,2);
-	dig_T1 = (u_cal[0]<<8) ^ u_cal[1];
+	dig_T1 = (u_cal[0]<<8) | u_cal[1];
 
 	int32_t cal[4];
 	read_i2c_bytes(ALTIMETER_I2C_ADDR,BMP_DIG_T2_LSB_REG,cal,4);
-	dig_T2 = (cal[0]<<8) ^ cal[1];
-	dig_T3 = (cal[2]<<8) ^ cal[3];
+	dig_T2 = (cal[0]<<8) | cal[1];
+	dig_T3 = (cal[2]<<8) | cal[3];
 
 	read_i2c_bytes(ALTIMETER_I2C_ADDR,BMP_DIG_P1_LSB_REG,u_cal,2);
-	dig_P1 = (u_cal[0]<<8) ^ u_cal[1];
+	dig_P1 = (u_cal[0]<<8) | u_cal[1];
 
 	int32_t calP[16]; 
 	read_i2c_bytes(ALTIMETER_I2C_ADDR,BMP_DIG_P2_LSB_REG,calP,16);
-	dig_P2 = (calP[0]<<8) ^ calP[1];
-	dig_P3 = (calP[2]<<8) ^ calP[3];
-	dig_P4 = (calP[4]<<8) ^ calP[5];
-	dig_P5 = (calP[6]<<8) ^ calP[7];
-	dig_P6 = (calP[8]<<8) ^ calP[9];
-	dig_P7 = (calP[10]<<8) ^ calP[11];
-	dig_P8 = (calP[12]<<8) ^ calP[13];
-	dig_P9 = (calP[14]<<8) ^ calP[15];
-
-
-
-
-	
+	dig_P2 = (calP[0]<<8) | calP[1];
+	dig_P3 = (calP[2]<<8) | calP[3];
+	dig_P4 = (calP[4]<<8) | calP[5];
+	dig_P5 = (calP[6]<<8) | calP[7];
+	dig_P6 = (calP[8]<<8) | calP[9];
+	dig_P7 = (calP[10]<<8) | calP[11];
+	dig_P8 = (calP[12]<<8) | calP[13];
+	dig_P9 = (calP[14]<<8) | calP[15];
 }
 
 //Read temperature from BMP280 sensor
-void bmp_read_temperature(){
+void bmp_read_uncomp_temp(){
 	//Get temperature value from register
 	uint8_t temperature_mes[3];
 	read_i2c_bytes(ALTIMETER_I2C_ADDR,BMP_PRESS_MSB_REG,temperature_mes,3);
 	
-	temperature = (temperature_mes[0]<<9) ^ (temperature_mes[1]<<1) ^ temperature_mes[2];
+	int32_t temperature = (temperature_mes[0]<<9) | (temperature_mes[1]<<1) | temperature_mes[2];
 
 	temperature = bmp280_compensate_T_int32((int32_t)temperature);
 	
@@ -97,17 +76,17 @@ void bmp_read_temperature(){
 
 //Read pressure from BMP280 sensor
 //PLEASE READ TEMPERATURE BEFORE PRESSURE AS PRESSURE IS DEPENDENT ON TEMPERATURE
-void bmp_read_pressure(){
+/*void bmp_read_pressure(){
 	
 	//Get pressure value from register
 	uint8_t pressure_mes[3];
 	read_i2c_bytes(ALTIMETER_I2C_ADDR,BMP_PRESS_MSB_REG,pressure_mes,3);
 	
-	pressure = (pressure_mes[0]<<12) ^ (pressure_mes[1]<<4) ^ pressure_mes[2];
+	pressure = (pressure_mes[0]<<12) | (pressure_mes[1]<<4) | pressure_mes[2];
 
 	pressure = bmp280_compensate_P_int64((int32_t)pressure);
 	
-}
+}*/
 
 
 
@@ -151,7 +130,7 @@ uint32_t bmp280_compensate_P_int64(int32_t adc_P) {
 
 //****************************************************Getters*************************************************
 
-uint32_t getPressure(){
+/*uint32_t getPressure(){
 	
 	return pressure; 	
 }
@@ -159,4 +138,4 @@ uint32_t getPressure(){
 uint32_t getTemperature(){
 	
 	return temperature;
-}
+}*/

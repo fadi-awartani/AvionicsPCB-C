@@ -7,22 +7,6 @@
 #include <asf.h>
 #include "main.h"
 
-#if defined (__GNUC__)
-__attribute__((__interrupt__))
-#elif defined(__ICCAVR32__)
-__interrupt
-#endif
-static void read_gps_byte() {
-	int val;
-	char c;
-	
-	usart_read_char(&GPS_USART, &val);
-	c = (char) val;
-	gps_processChar(c);
-	GPS_USART.idr = 1;
-	GPS_USART.ier = 1;
-}
-
 // GPIO Module init
 void init_gpio() {
 	/*
@@ -40,7 +24,7 @@ void init_gpio() {
 				   
 		--PORT B--
 		GPER: -32- 0000 0000 0000 0000
-				   0000 0011 1100 1111 -0- == 0x3CF
+				   0000 0011 1100 0011 -0- == 0x3C3
 				   
 		PMR0: -32- 0000 0000 0000 0000
 				   0000 0000 0000 0000 -0- == 0x0
@@ -56,11 +40,10 @@ void init_gpio() {
 	gpio_portA->pmr1 = 0x1E0;
 	gpio_portA->puers = 0x600;//Enable pullup on I2C lines
 	
-	gpio_portB->gper = 0x3CF;//change to 0x3CF
-	gpio_portB->pmr0 = 0;//keep
-	//gpio_portB->oder = 0xC00;
-	//gpio_portB->ovr = 0xC00;
+	gpio_portB->gper = 0x3C3;
+	gpio_portB->pmr0 = 0;
 	gpio_portB->pmr1 = 0xC00;
+	gpio_portB->puers = 0xC; //Enable pullup on buttons
 }
 
 // USART init
@@ -101,18 +84,6 @@ void init_usarts() {
 	//usart_init_modem(&AVR32_USART1, &USART1_OPTIONS, 24000000); //For Iridium. make sure to swap tx/rx pins on board first :(
 	usart_init_rs232(&AVR32_USART1, &USART1_OPTIONS, 24000000);
 	usart_init_rs232(&AVR32_USART2, &USART2_OPTIONS, 24000000);
-	
-	// Disable all interrupts.
-	Disable_global_interrupt();
-
-	// Initialize interrupt vectors.
-	INTC_init_interrupts();
-	
-	INTC_register_interrupt(&read_gps_byte, GPS_USART_IRQ, AVR32_INTC_INT0);
-	
-	GPS_USART.ier = AVR32_USART_IER_RXRDY_MASK;
-	
-	Enable_global_interrupt();
 }
 
 // I2C init
@@ -194,18 +165,37 @@ void update_watchdog() {
 	AVR32_WDT.clr = 0xFFFFFFFF;
 }
 
+
+//32kHz clock prescaled by 2^(4+1): Counts at 1000 Hz.
+void init_rtc() {
+	//AVR32_PM.oscctrl32 = 0x00020101; //enable
+	AVR32_PM.oscctrl32 = 0; //disable
+	AVR32_RTC.val = 0;
+	AVR32_RTC.ctrl = 0x00010405;
+	AVR32_RTC.top = 0xFFFFFFFF;
+}
+
+//returns value of counter counting at 1000 Hz
+unsigned long millis() {
+	return AVR32_RTC.val;
+}
+
 // Board init
 void initialize_board() {
 	// Initialize and enable interrupts
 	irq_initialize_vectors();
 	cpu_irq_enable();
 	
+	init_rtc();
 	init_gpio();
 	init_usarts();
+	init_gps();
 	//init_i2c();
 	init_pwm();
 	init_watchdog();
-
+	init_eic();
+	
+	bmp_setup();
 	
 	// Start USB stack to authorize VBus monitoring
 	#ifdef EN_USB
