@@ -68,6 +68,9 @@
 // From module: Delay routines
 #include <delay.h>
 
+// From module: EIC - External Interrupt Controller
+#include <eic.h>
+
 // From module: FLASHC - Flash Controller
 #include <flashc.h>
 

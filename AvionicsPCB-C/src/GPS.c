@@ -17,6 +17,46 @@ long gps_time = 0;
 int gps_alt = 0;
 int gps_nsatts = 0;
 
+#if defined (__GNUC__)
+__attribute__((__interrupt__))
+#elif defined(__ICCAVR32__)
+__interrupt
+#endif
+static void read_gps_byte() {
+	//irqflags_t flags;
+	//flags = cpu_irq_save();
+	
+	int val;
+	char c;
+	
+	while(usart_test_hit(&GPS_USART))
+	usart_read_char(&GPS_USART, &val);
+	
+	c = (char) val;
+	gps_processChar(c);
+	
+	GPS_USART.idr = 1;
+	GPS_USART.ier = 1;
+	val = GPS_USART.rhr;
+	
+	//cpu_irq_restore(flags);
+}
+
+void init_gps() {
+	
+	// Disable all interrupts.
+	Disable_global_interrupt();
+
+	// Initialize interrupt vectors.
+	INTC_init_interrupts();
+	
+	INTC_register_interrupt(&read_gps_byte, GPS_USART_IRQ, AVR32_INTC_INT0);
+	
+	GPS_USART.ier = AVR32_USART_IER_RXRDY_MASK;
+	
+	Enable_global_interrupt();
+}
+
 void gps_processChar(char c) {
 	if(sentenceDone)
 		return;
@@ -89,4 +129,16 @@ int gpsAlt() {
 long gpsTime() {
 	dataReady = 0;
 	return gps_time;
+}
+
+void turnOnGPS() {
+	AVR32_GPIO.port[1].gpers = 1 << 8;
+	AVR32_GPIO.port[0].oders = 0x80000000;
+	AVR32_GPIO.port[1].oders = 1 << 8;
+	AVR32_GPIO.port[0].ovrs = 0x80000000;
+	AVR32_GPIO.port[1].ovrs = 1 << 8;
+}
+
+void resetGPS() {
+	return;
 }

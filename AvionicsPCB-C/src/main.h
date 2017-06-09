@@ -34,20 +34,17 @@ extern int send_i2c_bytes(uint8_t device_address, uint8_t internal_address, uint
 extern int read_i2c_bytes(uint8_t device_address, uint8_t internal_address, uint8_t *data_bytes, int len);
 //extern void read_gps_byte();
 
-/*#if defined (__GNUC__)
-__attribute__((__interrupt__))
-#elif defined(__ICCAVR32__)
-__interrupt
-#endif
-static void read_gps_byte();*/
+//GPS
+extern void init_gps();
 extern void gps_processChar(char dat);
-
 extern int prepare_gps_data();
 extern double gpsLong();
 extern double gpsLat();
 extern int gpsAlt();
 extern long gpsTime();
 extern int isDataReady();
+extern void turnOnGPS();
+extern void resetGPS();
 
 //BMP280
 extern void bmp_setup ();
@@ -57,5 +54,11 @@ extern uint32_t bmp280_compensate_T_int32(int32_t adc_T);
 extern uint32_t bmp280_compensate_P_int64(int32_t adc_P);
 extern uint32_t getPressure();
 extern uint32_t getTemperature();
+
+//EIC
+extern void init_eic();
+
+//RTC
+extern unsigned long millis();
 
 #endif /* MAIN_H_ */

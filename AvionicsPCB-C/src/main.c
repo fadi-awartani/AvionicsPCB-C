@@ -5,7 +5,7 @@
  *
  */
 #include "main.h"
-
+unsigned long tt = 0;
 int main (void) {
 	// System Init
 	sysclk_init();
@@ -22,14 +22,23 @@ int main (void) {
 	//gpio_clr_gpio_pin(BLUE_LED_PIN);
 	gpio_set_gpio_pin(RED_LED_PIN);
 	
+	gpio_clr_gpio_pin(GPS_RESET_PIN);
+	gpio_clr_gpio_pin(GPS_VBACKUP_PIN);
+	
 int i = 0;
 	// Main loop
 	while(1) {
+		if(millis() > tt + 500) {
+			tt = millis();
+		} else
+		{
+			continue;
+		}
 		prepare_gps_data();
 		
 		if(isDataReady()) {
 			sprintf(gen_string, "GPS is at %f,%f at time %ld\r\n", gpsLat(), gpsLong(), gpsTime());
-			usart_write_line(&RFD_USART, gen_string);
+			//usart_write_line(&RFD_USART, gen_string);
 		}
 		
 		//gpio_tgl_gpio_pin(BLUE_LED_PIN);
@@ -53,9 +62,9 @@ int i = 0;
 		if(!read_i2c_bytes(ALTIMETER_I2C_ADDR, BMP_DEVICE_ID_REG, &data1, 1) &&
 			!read_i2c_bytes(IMU_I2C_ADDR, WHO_AM_I_ADDR, &data2, 1)) {
 			sprintf(gen_string, "BMP device id is: 0x%x, IMU \"who am i\" is: 0x%x.\r\n", data1, data2);
-			usart_write_line(&AVR32_USART0, gen_string);
+			//usart_write_line(&AVR32_USART0, gen_string);
 		} else
-			usart_write_line(&AVR32_USART0, "There was an I2C error.\n");
+			;//usart_write_line(&AVR32_USART0, "There was an I2C error.\n");
 		
 		#ifdef EN_USB
 		println_usb_debug("Testing USB!!");
@@ -63,6 +72,9 @@ int i = 0;
 		
 		i++;
 		update_watchdog();
-		delay_ms(500);
+		while(millis() > tt + 500) {
+			tt = millis();
+		}
+		//delay_ms(500);
 	}
 }
