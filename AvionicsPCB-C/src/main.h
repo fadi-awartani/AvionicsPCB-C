@@ -35,13 +35,22 @@ extern int read_i2c_bytes(uint8_t device_address, uint8_t internal_address, uint
 //extern void read_gps_byte();
 
 //GPS
+typedef struct gps_coordinates_struct {
+	double lat = 0;
+	double lon = 0;
+	long time = 0;
+} gps_coordinates_t;
+
+typedef struct gps_altitude_struct {
+	int alt = 0;
+	long time = 0;
+} gps_altitude_t;
+
 extern void init_gps();
 extern void gps_processChar(char dat);
 extern int prepare_gps_data();
-extern double gpsLong();
-extern double gpsLat();
-extern int gpsAlt();
-extern long gpsTime();
+extern gps_coordinates_t getGPSCoordinates();
+extern gps_altitude_t getGPSAltitude();
 extern int isDataReady();
 extern void turnOnGPS();
 extern void resetGPS();

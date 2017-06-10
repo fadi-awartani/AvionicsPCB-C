@@ -6,6 +6,12 @@
  */ 
 #include "main.h"
 
+//Don't do anything if button press is within BUTTON_HOLDTIME ms of last press. For de-bouncing purposes.
+#define BUTTON1_HOLDTIME 250
+#define BUTTON2_HOLDTIME 250
+
+long lastPressed[2];
+
 #if __GNUC__
 __attribute__((__interrupt__))
 #elif __ICCAVR32__
@@ -14,6 +20,12 @@ __interrupt
 static void button1_interrupt(void)
 {
 	eic_clear_interrupt_line(&AVR32_EIC, EXT_INT6);
+	
+	if(millis() < lastPressed[0] + BUTTON1_HOLDTIME)
+		return;
+		
+	lastPressed[0] = millis();
+	
 	turnOnGPS();
 	pwm_start_channels(1 << BUZZER_PWM);
 }
@@ -26,6 +38,12 @@ __interrupt
 static void button2_interrupt(void)
 {
 	eic_clear_interrupt_line(&AVR32_EIC, EXT_INT7);
+	
+	if(millis() < lastPressed[1] + BUTTON1_HOLDTIME)
+		return;
+	
+	lastPressed[1] = millis();
+	
 	pwm_stop_channels(1 << BUZZER_PWM);
 	gpio_tgl_gpio_pin(RED_LED_PIN);
 }
@@ -52,7 +70,7 @@ void init_eic() {
 	eic_options[1].eic_line   = EXT_INT7;
 	
 	Disable_global_interrupt();
-	INTC_init_interrupts();
+	//INTC_init_interrupts();
 
 	// Register the EIC interrupt handlers to the interrupt controller.
 	INTC_register_interrupt(&button1_interrupt,AVR32_EIC_IRQ_6, AVR32_INTC_INT0);

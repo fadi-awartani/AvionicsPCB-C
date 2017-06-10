@@ -38,7 +38,7 @@ void init_gpio() {
 	gpio_portA->gper = 0x30320000UL;
 	gpio_portA->pmr0 = 0x0C002000UL;
 	gpio_portA->pmr1 = 0x1E0;
-	gpio_portA->puers = 0x600;//Enable pullup on I2C lines
+	gpio_portA->puers = 0x80000600UL;//Enable pullup on I2C lines and GPS battery backup
 	
 	gpio_portB->gper = 0x3C3;
 	gpio_portB->pmr0 = 0;
@@ -168,16 +168,17 @@ void update_watchdog() {
 
 //32kHz clock prescaled by 2^(4+1): Counts at 1000 Hz.
 void init_rtc() {
-	//AVR32_PM.oscctrl32 = 0x00020101; //enable
-	AVR32_PM.oscctrl32 = 0; //disable
+	//AVR32_PM.oscctrl32 = 0x00060101; //enable 32kHz oscillator: Warning: gets connected to USART0 CTS and RTS
+	AVR32_PM.oscctrl32 = 0; //disable 32kHz oscillator
 	AVR32_RTC.val = 0;
-	AVR32_RTC.ctrl = 0x00010405;
+	//AVR32_RTC.ctrl = 0x0001040D; //use 32kHz osc
+	AVR32_RTC.ctrl = 0x00010605; //use internal RC oscillator. Not very accurate but whatever.
 	AVR32_RTC.top = 0xFFFFFFFF;
 }
 
-//returns value of counter counting at 1000 Hz
+//returns value of counter counting at ~1000 Hz (not very accurate)
 unsigned long millis() {
-	return AVR32_RTC.val;
+	return AVR32_RTC.val*9070/8000;
 }
 
 // Board init
@@ -189,11 +190,14 @@ void initialize_board() {
 	init_rtc();
 	init_gpio();
 	init_usarts();
-	init_gps();
-	//init_i2c();
+	//init_i2c();//old, not needed anymore
 	init_pwm();
 	init_watchdog();
+	
+	//Interrupt things
+	INTC_init_interrupts();
 	init_eic();
+	init_gps();
 	
 	bmp_setup();
 	

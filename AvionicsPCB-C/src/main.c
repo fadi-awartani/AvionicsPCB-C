@@ -5,6 +5,8 @@
  *
  */
 #include "main.h"
+//#define DISABLE_MILLIS
+
 unsigned long tt = 0;
 int main (void) {
 	// System Init
@@ -28,17 +30,20 @@ int main (void) {
 int i = 0;
 	// Main loop
 	while(1) {
+		
+		#ifndef DISABLE_MILLIS
 		if(millis() > tt + 500) {
 			tt = millis();
 		} else
 		{
 			continue;
 		}
+		#endif
 		prepare_gps_data();
 		
 		if(isDataReady()) {
 			sprintf(gen_string, "GPS is at %f,%f at time %ld\r\n", gpsLat(), gpsLong(), gpsTime());
-			//usart_write_line(&RFD_USART, gen_string);
+			usart_write_line(&RFD_USART, gen_string);
 		}
 		
 		//gpio_tgl_gpio_pin(BLUE_LED_PIN);
@@ -72,9 +77,8 @@ int i = 0;
 		
 		i++;
 		update_watchdog();
-		while(millis() > tt + 500) {
-			tt = millis();
-		}
-		//delay_ms(500);
+		#ifdef DISABLE_MILLIS
+		delay_ms(500);
+		#endif
 	}
 }
