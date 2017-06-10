@@ -52,6 +52,9 @@ void init_gps() {
 	
 	//Turn on GLL and RMC messages on every fix.
 	usart_write_line(&GPS_USART, "$PMTK314,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28\r\n");
+	
+	//Update message rate (and possibly baud rate) to be higher
+	//TODO
 }
 
 void gps_processChar(char c) {

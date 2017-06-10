@@ -13,8 +13,8 @@ int main (void) {
 	sysclk_init();
 	initialize_board();
 	
-	usart_write_line(&AVR32_USART1, "Hello, this is the AVR UC3 MCU saying hello!\r\n");
 	usart_write_line(&AVR32_USART0, "Hello, this is the AVR UC3 MCU saying hello!\r\n");
+	usart_write_line(&AVR32_USART1, "Hello, this is the AVR UC3 MCU saying hello!\r\n");
 	usart_write_line(&AVR32_USART2, "Hello, this is the AVR UC3 MCU saying hello!\r\n");
 	
 #ifdef EN_USB
@@ -23,9 +23,6 @@ int main (void) {
 
 	//gpio_clr_gpio_pin(BLUE_LED_PIN);
 	gpio_set_gpio_pin(RED_LED_PIN);
-	
-	gpio_clr_gpio_pin(GPS_RESET_PIN);
-	gpio_clr_gpio_pin(GPS_VBACKUP_PIN);
 	
 int i = 0;
 	// Main loop
@@ -42,7 +39,10 @@ int i = 0;
 		prepare_gps_data();
 		
 		if(isDataReady()) {
-			sprintf(gen_string, "GPS is at %f,%f at time %ld\r\n", gpsLat(), gpsLong(), gpsTime());
+			sprintf(gen_string, "GPS is at %f,%f at time %ld\r\n",
+				getGPSCoordinates().lat, 
+				getGPSCoordinates().lon,
+				getGPSCoordinates().time);
 			usart_write_line(&RFD_USART, gen_string);
 		}
 		
