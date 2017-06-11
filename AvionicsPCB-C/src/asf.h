@@ -113,6 +113,9 @@
 // From module: System Clock Control - UC3 B0 implementation
 #include <sysclk.h>
 
+// From module: TC - Timer/Counter
+#include <tc.h>
+
 // From module: TWI - Two-Wire Interface
 #include <twi.h>
 

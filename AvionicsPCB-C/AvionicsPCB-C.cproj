@@ -31,6 +31,7 @@
   <options>
     <option id="avr32.components.memory.sd_mmc.sd_mmc_spi" value="Add" config="" content-id="Atmel.ASF" />
     <option id="avr32.drivers.adc" value="Add" config="" content-id="Atmel.ASF" />
+    <option id="avr32.drivers.eic" value="Add" config="" content-id="Atmel.ASF" />
     <option id="avr32.drivers.gpio" value="Add" config="" content-id="Atmel.ASF" />
     <option id="avr32.drivers.intc" value="Add" config="" content-id="Atmel.ASF" />
     <option id="avr32.drivers.pm" value="Add" config="" content-id="Atmel.ASF" />
@@ -44,7 +45,7 @@
     <option id="common.services.basic.twi" value="Add" config="" content-id="Atmel.ASF" />
     <option id="common.services.usb.class.device" value="Add" config="cdc" content-id="Atmel.ASF" />
     <option id="common.utils.interrupt" value="Add" config="" content-id="Atmel.ASF" />
-    <option id="avr32.drivers.eic" value="Add" config="" content-id="Atmel.ASF" />
+    <option id="avr32.drivers.tc" value="Add" config="" content-id="Atmel.ASF" />
   </options>
   <configurations>
     <configuration key="config.avr32.utils.trampoline" value="yes" default="yes" content-id="Atmel.ASF" />
@@ -150,6 +151,8 @@
     <file path="src/ASF/common/services/usb/udc/udi.h" framework="" version="3.32.0" source="common\services\usb\udc\udi.h" changed="False" content-id="Atmel.ASF" />
     <file path="src/ASF/avr32/drivers/eic/eic.h" framework="" version="3.32.0" source="avr32\drivers\eic\eic.h" changed="False" content-id="Atmel.ASF" />
     <file path="src/ASF/avr32/drivers/eic/eic.c" framework="" version="3.32.0" source="avr32\drivers\eic\eic.c" changed="False" content-id="Atmel.ASF" />
+    <file path="src/ASF/avr32/drivers/tc/tc.c" framework="" version="3.32.0" source="avr32\drivers\tc\tc.c" changed="False" content-id="Atmel.ASF" />
+    <file path="src/ASF/avr32/drivers/tc/tc.h" framework="" version="3.32.0" source="avr32\drivers\tc\tc.h" changed="False" content-id="Atmel.ASF" />
   </files>
   <documentation help="http://asf.atmel.com/docs/3.32.0/common.applications.user_application.user_board.uc3b/html/index.html" />
   <offline-documentation help="" />
@@ -269,6 +272,7 @@
       <Value>../src/ASF/common/services/usb/class/cdc/device</Value>
       <Value>../src/ASF/common/services/usb/udc</Value>
       <Value>../src/ASF/avr32/drivers/eic</Value>
+      <Value>../src/ASF/avr32/drivers/tc</Value>
     </ListValues>
   </avr32gcc.compiler.directories.IncludePaths>
   <avr32gcc.compiler.optimization.level>Optimize for size (-Os)</avr32gcc.compiler.optimization.level>
@@ -322,6 +326,7 @@
       <Value>../src/ASF/common/services/usb/class/cdc/device</Value>
       <Value>../src/ASF/common/services/usb/udc</Value>
       <Value>../src/ASF/avr32/drivers/eic</Value>
+      <Value>../src/ASF/avr32/drivers/tc</Value>
     </ListValues>
   </avr32gcc.assembler.general.IncludePaths>
   <avr32gcc.preprocessingassembler.general.AssemblerFlags>-mrelax -DBOARD=USER_BOARD -DSD_MMC_SPI_ENABLE -DUDD_ENABLE</avr32gcc.preprocessingassembler.general.AssemblerFlags>
@@ -359,6 +364,7 @@
       <Value>../src/ASF/common/services/usb/class/cdc/device</Value>
       <Value>../src/ASF/common/services/usb/udc</Value>
       <Value>../src/ASF/avr32/drivers/eic</Value>
+      <Value>../src/ASF/avr32/drivers/tc</Value>
     </ListValues>
   </avr32gcc.preprocessingassembler.general.IncludePaths>
 </Avr32Gcc>
@@ -413,6 +419,7 @@
       <Value>../src/ASF/common/services/usb/class/cdc/device</Value>
       <Value>../src/ASF/common/services/usb/udc</Value>
       <Value>../src/ASF/avr32/drivers/eic</Value>
+      <Value>../src/ASF/avr32/drivers/tc</Value>
     </ListValues>
   </avr32gcc.compiler.directories.IncludePaths>
   <avr32gcc.compiler.optimization.level>Optimize (-O1)</avr32gcc.compiler.optimization.level>
@@ -467,6 +474,7 @@
       <Value>../src/ASF/common/services/usb/class/cdc/device</Value>
       <Value>../src/ASF/common/services/usb/udc</Value>
       <Value>../src/ASF/avr32/drivers/eic</Value>
+      <Value>../src/ASF/avr32/drivers/tc</Value>
     </ListValues>
   </avr32gcc.assembler.general.IncludePaths>
   <avr32gcc.assembler.debugging.DebugLevel>Default (-g)</avr32gcc.assembler.debugging.DebugLevel>
@@ -505,6 +513,7 @@
       <Value>../src/ASF/common/services/usb/class/cdc/device</Value>
       <Value>../src/ASF/common/services/usb/udc</Value>
       <Value>../src/ASF/avr32/drivers/eic</Value>
+      <Value>../src/ASF/avr32/drivers/tc</Value>
     </ListValues>
   </avr32gcc.preprocessingassembler.general.IncludePaths>
   <avr32gcc.preprocessingassembler.debugging.DebugLevel>Default (-Wa,-g)</avr32gcc.preprocessingassembler.debugging.DebugLevel>
@@ -533,6 +542,12 @@
     <Compile Include="src\ASF\avr32\drivers\pwm\pwm.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\ASF\avr32\drivers\tc\tc.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="src\ASF\avr32\drivers\tc\tc.h">
+      <SubType>compile</SubType>
+    </None>
     <Compile Include="src\ASF\avr32\drivers\usbb\usbb_device.c">
       <SubType>compile</SubType>
     </Compile>
@@ -850,6 +865,7 @@
     <Folder Include="src\ASF\avr32\drivers\pm\" />
     <Folder Include="src\ASF\avr32\drivers\pwm\" />
     <Folder Include="src\ASF\avr32\drivers\spi\" />
+    <Folder Include="src\ASF\avr32\drivers\tc\" />
     <Folder Include="src\ASF\avr32\drivers\twi\" />
     <Folder Include="src\ASF\avr32\drivers\usart\" />
     <Folder Include="src\ASF\avr32\drivers\usbb\" />

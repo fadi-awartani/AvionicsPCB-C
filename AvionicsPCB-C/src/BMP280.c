@@ -6,9 +6,6 @@
  */ 
 
 #include "main.h"
-//Values to measure
-uint32_t recent_pres = 0;
-int32_t recent_temp = 0;
 
 //Calibration variables
 uint32_t dig_T1 = 0; int32_t dig_T2 = 0, dig_T3 = 0;
@@ -20,7 +17,7 @@ int32_t t_fine = 0;
 
 
 //Set up the BMP280 pressure sensor
-void bmp_setup (){
+void init_bmp (){
 
 	//Reset the registers
 	uint8_t dat = 0xB6;
@@ -36,77 +33,93 @@ void bmp_setup (){
 	send_i2c_bytes(ALTIMETER_I2C_ADDR,BMP_CONFIG_REG,&dat,1);
 
 	//Set up calibration values
-	uint32_t u_cal[2];
-	read_i2c_bytes(ALTIMETER_I2C_ADDR,BMP_DIG_T1_LSB_REG,u_cal,2);
-	dig_T1 = (u_cal[0]<<8) | u_cal[1];
+	uint8_t calib[6];
+	read_i2c_bytes(ALTIMETER_I2C_ADDR,BMP_DIG_T1_LSB_REG,calib,6);
+	dig_T1 = (calib[1]<<8) | calib[0];
+	dig_T2 = (calib[3]<<8) | calib[2];
+	dig_T3 = (calib[5]<<8) | calib[4];
 
-	int32_t cal[4];
-	read_i2c_bytes(ALTIMETER_I2C_ADDR,BMP_DIG_T2_LSB_REG,cal,4);
-	dig_T2 = (cal[0]<<8) | cal[1];
-	dig_T3 = (cal[2]<<8) | cal[3];
-
-	read_i2c_bytes(ALTIMETER_I2C_ADDR,BMP_DIG_P1_LSB_REG,u_cal,2);
-	dig_P1 = (u_cal[0]<<8) | u_cal[1];
-
-	int32_t calP[16]; 
-	read_i2c_bytes(ALTIMETER_I2C_ADDR,BMP_DIG_P2_LSB_REG,calP,16);
-	dig_P2 = (calP[0]<<8) | calP[1];
-	dig_P3 = (calP[2]<<8) | calP[3];
-	dig_P4 = (calP[4]<<8) | calP[5];
-	dig_P5 = (calP[6]<<8) | calP[7];
-	dig_P6 = (calP[8]<<8) | calP[9];
-	dig_P7 = (calP[10]<<8) | calP[11];
-	dig_P8 = (calP[12]<<8) | calP[13];
-	dig_P9 = (calP[14]<<8) | calP[15];
+	int32_t calib_p[18]; 
+	read_i2c_bytes(ALTIMETER_I2C_ADDR,BMP_DIG_P1_LSB_REG,calib_p,18);
+	dig_P1 = (calib_p[1]<<8) | calib_p[0];
+	dig_P2 = (calib_p[3]<<8) | calib_p[2];
+	dig_P3 = (calib_p[5]<<8) | calib_p[4];
+	dig_P4 = (calib_p[7]<<8) | calib_p[6];
+	dig_P5 = (calib_p[9]<<8) | calib_p[8];
+	dig_P6 = (calib_p[11]<<8) | calib_p[10];
+	dig_P7 = (calib_p[13]<<8) | calib_p[12];
+	dig_P8 = (calib_p[15]<<8) | calib_p[14];
+	dig_P9 = (calib_p[17]<<8) | calib_p[16];
 }
 
 //Read temperature from BMP280 sensor
-void bmp_read_uncomp_temp(){
-	//Get temperature value from register
+int32_t bmp_read_uncomp_temp(){
+	//Get temperature value from registers
 	uint8_t temperature_mes[3];
 	read_i2c_bytes(ALTIMETER_I2C_ADDR,BMP_PRESS_MSB_REG,temperature_mes,3);
 	
-	int32_t temperature = (temperature_mes[0]<<9) | (temperature_mes[1]<<1) | temperature_mes[2];
-
-	temperature = bmp280_compensate_T_int32((int32_t)temperature);
-	
-	
+	return (temperature_mes[0]<<12) | (temperature_mes[1]<<4) | (temperature_mes[2] >> 4);
 }
 
 
 //Read pressure from BMP280 sensor
 //PLEASE READ TEMPERATURE BEFORE PRESSURE AS PRESSURE IS DEPENDENT ON TEMPERATURE
-/*void bmp_read_pressure(){
-	
-	//Get pressure value from register
+int32_t bmp_read_uncomp_pressure(){
+	//Get pressure value from registers
 	uint8_t pressure_mes[3];
 	read_i2c_bytes(ALTIMETER_I2C_ADDR,BMP_PRESS_MSB_REG,pressure_mes,3);
 	
-	pressure = (pressure_mes[0]<<12) | (pressure_mes[1]<<4) | pressure_mes[2];
+	return (pressure_mes[0]<<12) | (pressure_mes[1]<<4) | (pressure_mes[2]>>4);
+}
 
-	pressure = bmp280_compensate_P_int64((int32_t)pressure);
-	
-}*/
-
-
-
+double bmp280_compensate_T_double(int32_t adc_T)
+{
+	double var1, var2, T;
+	var1 = (((double)adc_T)/16384.0 - ((double)dig_T1)/1024.0) * ((double)dig_T2);
+	var2 = ((((double)adc_T)/131072.0 - ((double)dig_T1)/8192.0) *
+	(((double)adc_T)/131072.0 - ((double) dig_T1)/8192.0)) * ((double)dig_T3);
+	t_fine = (int32_t)(var1 + var2);
+	T = (var1 + var2) / 5120.0;
+	return T;
+}
+// Returns pressure in Pa as double. Output value of “96386.2” equals 96386.2 Pa = 963.862 hPa
+double bmp280_compensate_P_double(int32_t adc_P)
+{
+	double var1, var2, p;
+	var1 = ((double)t_fine/2.0) - 64000.0;
+	var2 = var1 * var1 * ((double)dig_P6) / 32768.0;
+	var2 = var2 + var1 * ((double)dig_P5) * 2.0;
+	var2 = (var2/4.0)+(((double)dig_P4) * 65536.0);
+	var1 = (((double)dig_P3) * var1 * var1 / 524288.0 + ((double)dig_P2) * var1) / 524288.0;
+	var1 = (1.0 + var1 / 32768.0)*((double)dig_P1);
+	if (var1 == 0.0)
+	{
+		return 0; // avoid exception caused by division by zero
+	}
+	p = 1048576.0 - (double)adc_P;
+	p = (p - (var2 / 4096.0)) * 6250.0 / var1;
+	var1 = ((double)dig_P9) * p * p / 2147483648.0;
+	var2 = p * ((double)dig_P8) / 32768.0;
+	p = p + (var1 + var2 + ((double)dig_P7)) / 16.0;
+	return p;
+}altimeter_data_t readAltimeter() {	altimeter_data_t alt_data;	alt_data.temp = bmp280_compensate_T_double(bmp_read_uncomp_temp());	alt_data.pres = bmp280_compensate_P_double(bmp_read_uncomp_pressure());	alt_data.time = realTime();		return alt_data;}
 
 //Compensation code for the temperature
 //adc_T: Uncompensated temperature
 //return: compensated temperature using calibration register values
-uint32_t bmp280_compensate_T_int32(int32_t adc_T) {  
+/*uint32_t bmp280_compensate_T_int32(int32_t adc_T) {  
 	int32_t var1, var2, T;  
 	var1  = ((((adc_T>>3) - ((int32_t)dig_T1<<1))) * ((int32_t)dig_T2)) >> 11;
 	var2 = (((((adc_T>>4) - ((int32_t)dig_T1))*((adc_T>>4)-((int32_t)dig_T1)))>>12)*((int32_t)dig_T3))>>14;
 	t_fine = var1 + var2;
 	T  = (t_fine * 5 + 128) >> 8;
 	return T; 
-}
+}*/
 
 //Compensation code for the pressure
 //adc_P: Uncompensated pressure
 //return: compensated pressure using calibration register values
-uint32_t bmp280_compensate_P_int64(int32_t adc_P) {
+/*uint32_t bmp280_compensate_P_int64(int32_t adc_P) {
 	int64_t var1, var2, p;  
 	var1 = ((int64_t)t_fine) - 128000;  
 	var2 = var1 * var1 * (int64_t)dig_P6;  
@@ -124,7 +137,7 @@ uint32_t bmp280_compensate_P_int64(int32_t adc_P) {
 	p = ((p + var1 + var2) >> 8) + (((int64_t)dig_P7)<<4);  
 	return (uint32_t)p;
 
-}
+}*/
 
 
 

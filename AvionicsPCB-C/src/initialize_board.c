@@ -7,6 +7,8 @@
 #include <asf.h>
 #include "main.h"
 
+uint64_t millis_value = 0;
+
 // GPIO Module init
 void init_gpio() {
 	/*
@@ -121,9 +123,6 @@ void init_pwm() {
 	/* PWM channel configuration structure. */
 	avr32_pwm_channel_t pwm_channel = { .ccnt = 0 };
 		
-		/* With these settings, the output waveform period will be:
-	 * (115200/256)/20 == 22.5Hz == (MCK/prescaler)/period, with
-	 * MCK == 115200Hz, prescaler == 256, period == 20. */
 	pwm_channel.cdty = 5; /* Channel duty cycle, should be < CPRD. */
 	pwm_channel.cprd = 20; /* Channel period. */
 	pwm_channel.cupd = 0; /* Channel update is not used here. */
@@ -134,10 +133,7 @@ void init_pwm() {
 	
 	avr32_pwm_channel_t pwm_channel_blue_led = { .ccnt = 0 };
 		
-		/* With these settings, the output waveform period will be:
-	 * (115200/256)/20 == 22.5Hz == (MCK/prescaler)/period, with
-	 * MCK == 115200Hz, prescaler == 256, period == 20. */
-	pwm_channel_blue_led.cdty = 14; /* Channel duty cycle, should be < CPRD. */
+	pwm_channel_blue_led.cdty = 13; /* Channel duty cycle, should be < CPRD. I think this controls brightness. */
 	pwm_channel_blue_led.cprd = 15; /* Channel period. */
 	pwm_channel_blue_led.cupd = 0; /* Channel update is not used here. */
 	pwm_channel_blue_led.CMR.calg = PWM_MODE_LEFT_ALIGNED; /* Channel mode. */
@@ -157,8 +153,8 @@ void init_pwm() {
 }
 
 void init_watchdog() {
-	AVR32_WDT.ctrl = 0x55001501;
-	AVR32_WDT.ctrl = 0xAA001501;
+	AVR32_WDT.ctrl = 0x55001401;
+	AVR32_WDT.ctrl = 0xAA001401;
 }
 
 void update_watchdog() {
@@ -166,7 +162,8 @@ void update_watchdog() {
 }
 
 
-//32kHz clock prescaled by 2^(4+1): Counts at 1000 Hz.
+//RC oscillator clock prescaled by 2^(6+1): Counts at ~898 Hz.
+//Not used. TC module used for better reliability and accuracy.
 void init_rtc() {
 	//AVR32_PM.oscctrl32 = 0x00060101; //enable 32kHz oscillator: Warning: gets connected to USART0 CTS and RTS
 	AVR32_PM.oscctrl32 = 0; //disable 32kHz oscillator
@@ -176,9 +173,112 @@ void init_rtc() {
 	AVR32_RTC.top = 0xFFFFFFFF;
 }
 
-//returns value of counter counting at ~1000 Hz (not very accurate)
-unsigned long millis() {
-	return AVR32_RTC.val*9070/8000;
+/**
+ * \brief TC interrupt.
+ *
+ * The ISR handles RC compare interrupt and sets the update_timer flag to
+ * update the timer value.
+ */
+#if defined (__GNUC__)
+__attribute__((__interrupt__))
+#elif defined (__ICCAVR32__)
+#pragma handler = EXAMPLE_TC_IRQ_GROUP, 1
+__interrupt
+#endif
+static void tc_irq(void)
+{
+	// Increment the ms seconds counter
+	millis_value++;
+
+	// Clear the interrupt flag. This is a side effect of reading the TC SR.
+	tc_read_sr(&AVR32_TC, 0);
+}
+
+//Start the timer/counter module to generate a 1kHz counter variable for millis();
+void init_tc() {
+	INTC_register_interrupt(&tc_irq, AVR32_TC_IRQ0, AVR32_INTC_INT0);
+	
+	volatile avr32_tc_t *tc = &AVR32_TC;
+	
+	// Options for waveform generation.
+	static const tc_waveform_opt_t waveform_opt = {
+		// Channel selection.
+		.channel  = 0,
+		// Software trigger effect on TIOB.
+		.bswtrg   = TC_EVT_EFFECT_NOOP,
+		// External event effect on TIOB.
+		.beevt    = TC_EVT_EFFECT_NOOP,
+		// RC compare effect on TIOB.
+		.bcpc     = TC_EVT_EFFECT_NOOP,
+		// RB compare effect on TIOB.
+		.bcpb     = TC_EVT_EFFECT_NOOP,
+		// Software trigger effect on TIOA.
+		.aswtrg   = TC_EVT_EFFECT_NOOP,
+		// External event effect on TIOA.
+		.aeevt    = TC_EVT_EFFECT_NOOP,
+		// RC compare effect on TIOA.
+		.acpc     = TC_EVT_EFFECT_NOOP,
+		/*
+		 * RA compare effect on TIOA.
+		 * (other possibilities are none, set and clear).
+		 */
+		.acpa     = TC_EVT_EFFECT_NOOP,
+		/*
+		 * Waveform selection: Up mode with automatic trigger(reset)
+		 * on RC compare.
+		 */
+		.wavsel   = TC_WAVEFORM_SEL_UP_MODE_RC_TRIGGER,
+		// External event trigger enable.
+		.enetrg   = false,
+		// External event selection.
+		.eevt     = 0,
+		// External event edge selection.
+		.eevtedg  = TC_SEL_NO_EDGE,
+		// Counter disable when RC compare.
+		.cpcdis   = false,
+		// Counter clock stopped with RC compare.
+		.cpcstop  = false,
+		// Burst signal selection.
+		.burst    = false,
+		// Clock inversion.
+		.clki     = false,
+		// Internal source clock 3, connected to fPBA / 8.
+		.tcclks   = TC_CLOCK_SOURCE_TC3
+	};
+
+	// Options for enabling TC interrupts
+	static const tc_interrupt_t tc_interrupt = {
+		.etrgs = 0,
+		.ldrbs = 0,
+		.ldras = 0,
+		.cpcs  = 1, // Enable interrupt on RC compare alone
+		.cpbs  = 0,
+		.cpas  = 0,
+		.lovrs = 0,
+		.covfs = 0
+	};
+	// Initialize the timer/counter.
+	tc_init_waveform(tc, &waveform_opt);
+
+	/*
+	 * Set the compare triggers.
+	 * We configure it to count every 1 milliseconds.
+	 * We want: (1 / (fPBA / 8)) * RC = 1 ms, hence RC = (fPBA / 8) / 1000
+	 * to get an interrupt every 10 ms.
+	 */
+	tc_write_rc(tc, 0, (sysclk_get_pba_hz() / 8 / 1000));
+	// configure the timer interrupt
+	tc_configure_interrupts(tc, 0, &tc_interrupt);
+	// Start the timer/counter.
+	tc_start(tc, 0);
+}
+
+uint64_t millis() {
+	return millis_value;
+}
+
+uint64_t realTime() {
+	return millis() - millis_time_linked + real_time_linked;
 }
 
 // Board init
@@ -187,19 +287,18 @@ void initialize_board() {
 	irq_initialize_vectors();
 	cpu_irq_enable();
 	
-	init_rtc();
 	init_gpio();
 	init_usarts();
-	//init_i2c();//old, not needed anymore
 	init_pwm();
 	init_watchdog();
+	init_bmp();
 	
-	//Interrupt things
+	//Initialize interrupt-using modules.
 	INTC_init_interrupts();
 	init_eic();
 	init_gps();
-	
-	bmp_setup();
+	init_tc();
+	cpu_irq_enable();
 	
 	// Start USB stack to authorize VBus monitoring
 	#ifdef EN_USB

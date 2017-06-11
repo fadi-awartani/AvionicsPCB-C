@@ -11,10 +11,6 @@ char gps_line[MINMEA_MAX_LENGTH];
 int gps_index = 0;
 int sentenceDone = 0, dataReady; //booleans
 
-//Link millis() time and real time:
-long millis_time_linked, real_time_linked;
-//To get real time: millis() - millis_time_linked + real_time_linked;
-
 gps_coordinates_t gps_coordinates;
 gps_altitude_t gps_altitude;
 
@@ -50,8 +46,10 @@ void init_gps() {
 	
 	turnOnGPS();
 	
+	delay_ms(4);
+	
 	//Turn on GLL and RMC messages on every fix.
-	usart_write_line(&GPS_USART, "$PMTK314,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28\r\n");
+	usart_write_line(&GPS_USART, "$PMTK314,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28\r\n");
 	
 	//Update message rate (and possibly baud rate) to be higher
 	//TODO
@@ -89,12 +87,12 @@ int prepare_gps_data() {
 				if (minmea_parse_gga(&frame, gps_line)) {
 					gps_coordinates.lat = minmea_tocoord(&(frame.latitude));
 					gps_coordinates.lon = minmea_tocoord(&(frame.longitude));
-					gps_coordinates.time = millis() - millis_time_linked + real_time_linked;
+					gps_coordinates.time = realTime();
 					
 					gps_nsatts = frame.satellites_tracked;
 					
 					gps_altitude.alt = (int) ((frame.altitude.scale/(float)frame.altitude.value) + 0.5);
-					gps_altitude.time = millis() - millis_time_linked + real_time_linked;
+					gps_altitude.time = realTime();
 				}
 			} break;
 			
@@ -112,6 +110,9 @@ int prepare_gps_data() {
 		}
 		
 		usart_write_line(&AVR32_USART0, gps_line);
+		#ifdef EN_USB
+		println_usb_debug(gen_string);
+		#endif
 		sentenceDone = 0;
 		dataReady = 1;
 	}
