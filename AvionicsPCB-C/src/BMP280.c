@@ -25,7 +25,8 @@ void init_bmp (){
 	
 	//Set the resolution and measuring mode
 	//pressure x16, temperature x2 and normal mode
-	dat = 0x54;
+	//dat = 0x54;
+	dat = 0x57;
 	send_i2c_bytes(ALTIMETER_I2C_ADDR,BMP_CTRL_MEAS_REG,&dat,1);
 	
 	//Set the standby time IIR coefficient and disable SPI

@@ -78,7 +78,7 @@ int i = 0;
 			;//usart_write_line(&AVR32_USART0, "There was an I2C error.\n");*/
 		
 		altimeter_data_t alt_data = readAltimeter();
-		sprintf(gen_string, "Pressure and temp, at time: %d hP, %d C, time %d\nsizeof(double): %d\r\n", alt_data.pres, alt_data.temp, alt_data.time, sizeof(double));
+		sprintf(gen_string, "Pressure and temp, at time: %d hP, %d C, time %d\r\n", alt_data.pres, alt_data.temp, alt_data.time);
 		usart_write_line(&AVR32_USART0, gen_string);
 		
 		#ifdef EN_USB
