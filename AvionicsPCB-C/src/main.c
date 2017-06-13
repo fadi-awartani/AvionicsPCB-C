@@ -14,8 +14,8 @@ int main (void) {
 	sysclk_enable_peripheral_clock(&AVR32_TC);
 	initialize_board();
 	
-	usart_write_line(&AVR32_USART0, "Hello, this is the AVR UC3 MCU saying hello!\r\n");
-	usart_write_line(&AVR32_USART1, "Hello, this is the AVR UC3 MCU saying hello!\r\n");
+	usart_write_line(&AVR32_USART0, "\n\nHello, this is the AVR UC3 MCU saying hello!\r\n");
+	usart_write_line(&AVR32_USART1, "\n\nHello, this is the AVR UC3 MCU saying hello!\r\n");
 	usart_write_line(&AVR32_USART2, "Hello, this is the AVR UC3 MCU saying hello!\r\n");
 	
 #ifdef EN_USB
@@ -40,10 +40,12 @@ int i = 0;
 		prepare_gps_data();
 		
 		if(isDataReady()) {
-			sprintf(gen_string, "GPS is at %f,%f at time %ld\r\n",
-				getGPSCoordinates().lat, 
-				getGPSCoordinates().lon,
-				getGPSCoordinates().time);
+			gps_coordinates_t coords = getGPSCoordinates();
+			sprintf(gen_string, "GPS is at %f,%f, %d m high, at time %ld\r\n",
+				coords.lat, 
+				coords.lon,
+				coords.alt,
+				coords.time);
 			usart_write_line(&RFD_USART, gen_string);
 			
 			#ifdef EN_USB
@@ -77,9 +79,11 @@ int i = 0;
 		} else
 			;//usart_write_line(&AVR32_USART0, "There was an I2C error.\n");*/
 		
+		#ifndef DISABLE_BMP
 		altimeter_data_t alt_data = readAltimeter();
-		sprintf(gen_string, "Pressure and temp, at time: %d hP, %d C, time %d\r\n", alt_data.pres, alt_data.temp, alt_data.time);
+		sprintf(gen_string, "Pressure: %lf Pa, Temp: %lf C, Time: %d\r\n", alt_data.pres, alt_data.temp, alt_data.time);
 		usart_write_line(&AVR32_USART0, gen_string);
+		#endif
 		
 		#ifdef EN_USB
 		println_usb_debug("Testing USB!!");

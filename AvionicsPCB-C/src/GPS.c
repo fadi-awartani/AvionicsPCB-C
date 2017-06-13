@@ -12,8 +12,6 @@ int gps_index = 0;
 int sentenceDone = 0, dataReady; //booleans
 
 gps_coordinates_t gps_coordinates;
-gps_altitude_t gps_altitude;
-
 int gps_nsatts = 0;
 
 #if __GNUC__
@@ -46,7 +44,7 @@ void init_gps() {
 	
 	turnOnGPS();
 	
-	delay_ms(4);
+	//delay_ms(4);
 	
 	//Turn on GLL and RMC messages on every fix.
 	usart_write_line(&GPS_USART, "$PMTK314,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28\r\n");
@@ -56,6 +54,10 @@ void init_gps() {
 }
 
 void gps_processChar(char c) {
+	#ifdef ECHOGPS
+	RFD_USART.thr = c;
+	#endif
+	
 	if(sentenceDone)
 		return;
 	
@@ -87,12 +89,10 @@ int prepare_gps_data() {
 				if (minmea_parse_gga(&frame, gps_line)) {
 					gps_coordinates.lat = minmea_tocoord(&(frame.latitude));
 					gps_coordinates.lon = minmea_tocoord(&(frame.longitude));
+					gps_coordinates.alt = (int) ((frame.altitude.scale/(float)frame.altitude.value) + 0.5);
 					gps_coordinates.time = realTime();
 					
 					gps_nsatts = frame.satellites_tracked;
-					
-					gps_altitude.alt = (int) ((frame.altitude.scale/(float)frame.altitude.value) + 0.5);
-					gps_altitude.time = realTime();
 				}
 			} break;
 			
@@ -102,6 +102,7 @@ int prepare_gps_data() {
 					gps_coordinates.lat = minmea_tocoord(&(frame.latitude));
 					gps_coordinates.lon = minmea_tocoord(&(frame.longitude));
 					gps_coordinates.time = minmea_gettime(&(frame.date),&(frame.time));
+					gps_coordinates.alt = 0;
 					
 					millis_time_linked = millis();
 					real_time_linked = gps_coordinates.time;
@@ -109,10 +110,13 @@ int prepare_gps_data() {
 			} break;
 		}
 		
-		usart_write_line(&AVR32_USART0, gps_line);
-		#ifdef EN_USB
-		println_usb_debug(gen_string);
+		#ifndef DISABLE_VERBOSE
+			usart_write_line(&AVR32_USART0, gps_line);
+			#ifdef EN_USB
+				println_usb_debug(gen_string);
+			#endif
 		#endif
+		
 		sentenceDone = 0;
 		dataReady = 1;
 	}
@@ -131,16 +135,9 @@ gps_coordinates_t getGPSCoordinates() {
 	return gps_coordinates;
 }
 
-gps_altitude_t getGPSAltitude() {
-	dataReady = 0;
-	return gps_altitude;
-}
-
 void turnOnGPS() {
 	AVR32_GPIO.port[1].gpers = 1 << 8;
-	//AVR32_GPIO.port[0].oders = 0x80000000;
 	AVR32_GPIO.port[1].oders = 1 << 8;
-	//AVR32_GPIO.port[0].ovrs = 0x80000000;
 	AVR32_GPIO.port[1].ovrs = 1 << 8;
 }
 

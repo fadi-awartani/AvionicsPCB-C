@@ -40,7 +40,7 @@ void init_gpio() {
 	gpio_portA->gper = 0x30320000UL;
 	gpio_portA->pmr0 = 0x0C002000UL;
 	gpio_portA->pmr1 = 0x1E0;
-	gpio_portA->puers = 0x80000600UL;//Enable pullup on I2C lines and GPS battery backup
+	gpio_portA->puers = 0x600;//Enable pullup on I2C lines XXand GPS battery backupXX
 	
 	gpio_portB->gper = 0x3C3;
 	gpio_portB->pmr0 = 0;
@@ -54,7 +54,7 @@ void init_usarts() {
 	//RFD900
 	static const usart_options_t USART0_OPTIONS =
 	{
-		.baudrate     = 19200,
+		.baudrate     = 38400,
 		.charlength   = 8,
 		.paritytype   = USART_NO_PARITY,
 		.stopbits     = USART_1_STOPBIT,
@@ -81,11 +81,11 @@ void init_usarts() {
 		.channelmode  = USART_NORMAL_CHMODE
 	};
 	
-	//usart_init_hw_handshaking(&AVR32_USART0, &USART0_OPTIONS, 24000000);
-	usart_init_rs232(&AVR32_USART0, &USART0_OPTIONS, 24000000);
-	//usart_init_modem(&AVR32_USART1, &USART1_OPTIONS, 24000000); //For Iridium. make sure to swap tx/rx pins on board first :(
-	usart_init_rs232(&AVR32_USART1, &USART1_OPTIONS, 24000000);
-	usart_init_rs232(&AVR32_USART2, &USART2_OPTIONS, 24000000);
+	usart_init_hw_handshaking(&RFD_USART, &USART0_OPTIONS, 24000000);
+	//usart_init_rs232(&RFD_USART, &USART0_OPTIONS, 24000000);
+	//usart_init_modem(&IRIDIUM_USART, &USART1_OPTIONS, 24000000); //For Iridium. make sure to swap tx/rx pins on board first :(
+	usart_init_rs232(&IRIDIUM_USART, &USART1_OPTIONS, 24000000);
+	usart_init_rs232(&GPS_USART, &USART2_OPTIONS, 24000000);
 }
 
 // I2C init
@@ -278,7 +278,7 @@ uint64_t millis() {
 }
 
 uint64_t realTime() {
-	return millis() - millis_time_linked + real_time_linked;
+	return millis_value - millis_time_linked + real_time_linked;
 }
 
 // Board init

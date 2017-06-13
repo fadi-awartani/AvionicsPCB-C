@@ -15,6 +15,9 @@
 //#define EN_USB
 #define ENDCHARS "\r\n" //End characters for println.
 //#define GPSLINE_NUMCHARS 128
+#define DISABLE_BMP
+#define DISABLE_VERBOSE
+#define ECHOGPS
 
 // ---- GLOBAL VARIABLES ----
 char gen_string[128];
@@ -39,19 +42,14 @@ extern int read_i2c_bytes(uint8_t device_address, uint8_t internal_address, uint
 typedef struct gps_coordinates_struct {
 	double lat;
 	double lon;
-	long time;
-} gps_coordinates_t;
-
-typedef struct gps_altitude_struct {
 	int alt;
 	long time;
-} gps_altitude_t;
+} gps_coordinates_t;
 
 extern void init_gps();
 extern void gps_processChar(char dat);
 extern int prepare_gps_data();
 extern gps_coordinates_t getGPSCoordinates();
-extern gps_altitude_t getGPSAltitude();
 extern int isDataReady();
 extern void turnOnGPS();
 extern void resetGPS();
