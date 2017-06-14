@@ -8,8 +8,8 @@
 #include "nmea/minmea.h"
 
 char gps_line[MINMEA_MAX_LENGTH];
-int gps_index = 0;
-int sentenceDone = 0, dataReady; //booleans
+int gps_index;
+int dataReady; //booleans
 
 gps_coordinates_t gps_coordinates;
 int gps_nsatts = 0;
@@ -20,6 +20,7 @@ __attribute__((__interrupt__))
 __interrupt
 #endif
 static void read_gps_byte(void) {
+	Disable_global_interrupt();
 	int val;
 	char c;
 	
@@ -27,6 +28,8 @@ static void read_gps_byte(void) {
 	
 	c = (char) val;
 	gps_processChar(c);
+	
+	Enable_global_interrupt();
 	
 	GPS_USART.idr = 1;
 	GPS_USART.ier = 1;
@@ -47,7 +50,7 @@ void init_gps() {
 	//delay_ms(4);
 	
 	//Turn on GLL and RMC messages on every fix.
-	usart_write_line(&GPS_USART, "$PMTK314,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28\r\n");
+	usart_write_line(&GPS_USART, "$PMTK314,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*29\r\n");
 	
 	//Update message rate (and possibly baud rate) to be higher
 	//TODO
@@ -58,28 +61,23 @@ void gps_processChar(char c) {
 	RFD_USART.thr = c;
 	#endif
 	
-	if(sentenceDone)
-		return;
-	
 	if(c == '$' && gps_index != 0) {
 		gps_index = 0;
 	}
 	
-	gps_line[gps_index++ % MINMEA_MAX_LENGTH] = c;
+	gps_line[gps_index++ % (MINMEA_MAX_LENGTH-1)] = c;
 	
 	if(c == '\n') {
-		gps_line[gps_index++ % MINMEA_MAX_LENGTH] = '\0';
+		gps_line[gps_index++ % (MINMEA_MAX_LENGTH-1)] = '\0';
 		gps_index = 0;
-		sentenceDone = 1;
+		prepare_gps_data();
 	}
 }
 
 int prepare_gps_data() {
-	if(sentenceDone) {
-		
 		//Check if line is a valid NMEA sentence first. If not, just return.
 		if(!minmea_check(gps_line,true)) {
-			sentenceDone = 0;
+			gps_index = 0;
 			return;
 		}
 		
@@ -102,7 +100,7 @@ int prepare_gps_data() {
 					gps_coordinates.lat = minmea_tocoord(&(frame.latitude));
 					gps_coordinates.lon = minmea_tocoord(&(frame.longitude));
 					gps_coordinates.time = minmea_gettime(&(frame.date),&(frame.time));
-					gps_coordinates.alt = 0;
+					//gps_coordinates.alt = 0;
 					
 					millis_time_linked = millis();
 					real_time_linked = gps_coordinates.time;
@@ -117,9 +115,7 @@ int prepare_gps_data() {
 			#endif
 		#endif
 		
-		sentenceDone = 0;
 		dataReady = 1;
-	}
 }
 
 int isDataReady() {

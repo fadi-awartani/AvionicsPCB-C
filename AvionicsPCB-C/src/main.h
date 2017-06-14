@@ -12,16 +12,21 @@
 #include <stdlib.h>
 
 // ---- DEFINES ----
+#define AVR32_PDCA_CHANNEL_SPI_RX 0 
+#define AVR32_PDCA_CHANNEL_SPI_TX 1
 //#define EN_USB
 #define ENDCHARS "\r\n" //End characters for println.
 //#define GPSLINE_NUMCHARS 128
 #define DISABLE_BMP
-#define DISABLE_VERBOSE
-#define ECHOGPS
+//#define DISABLE_VERBOSE
+//#define ECHOGPS
 
 // ---- GLOBAL VARIABLES ----
 char gen_string[128];
 long millis_time_linked, real_time_linked; //Link millis() time and real time 
+char sd_initialized = 0;
+volatile char ram_buffer[1000];
+volatile char sd_transmit_buf[256];
 
 // ---- GENERAL FUNCTIONS ----
 extern void initialize_board();
@@ -53,6 +58,9 @@ extern gps_coordinates_t getGPSCoordinates();
 extern int isDataReady();
 extern void turnOnGPS();
 extern void resetGPS();
+
+// ---- SD CARD ----
+extern void sd_pdca_init();
 
 // ---- BMP280 ALTIMETER ----
 typedef struct altimeter_data_struct {

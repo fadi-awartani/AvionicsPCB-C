@@ -37,7 +37,6 @@ int i = 0;
 			continue;
 		}
 		#endif
-		prepare_gps_data();
 		
 		if(isDataReady()) {
 			gps_coordinates_t coords = getGPSCoordinates();
@@ -78,6 +77,16 @@ int i = 0;
 			
 		} else
 			;//usart_write_line(&AVR32_USART0, "There was an I2C error.\n");*/
+		
+		if(gpio_pin_is_high(SD_DETECT_PIN)) {
+			if(!sd_initialized) {
+				sd_pdca_init();
+			}
+		}
+		
+		if(sd_initialized) {
+			//Log data
+		}
 		
 		#ifndef DISABLE_BMP
 		altimeter_data_t alt_data = readAltimeter();

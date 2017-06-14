@@ -21,6 +21,7 @@ static void button1_interrupt(void)
 {
 	eic_clear_interrupt_line(&AVR32_EIC, EXT_INT6);
 	
+	Disable_global_interrupt();
 	if(millis() < lastPressed[0] + BUTTON1_HOLDTIME)
 		return;
 		
@@ -30,6 +31,7 @@ static void button1_interrupt(void)
 	pwm_start_channels(1 << BUZZER_PWM);
 	
 	usart_write_line(&GPS_USART, "$PMTK314,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28\r\n");
+	Enable_global_interrupt();
 }
 
 #if __GNUC__
@@ -41,6 +43,7 @@ static void button2_interrupt(void)
 {
 	eic_clear_interrupt_line(&AVR32_EIC, EXT_INT7);
 	
+	Disable_global_interrupt();
 	if(millis() < lastPressed[1] + BUTTON1_HOLDTIME)
 		return;
 	
@@ -50,6 +53,7 @@ static void button2_interrupt(void)
 	gpio_tgl_gpio_pin(RED_LED_PIN);
 	
 	usart_write_line(&GPS_USART, "$PMTK300,500,0,0,0,0*28\r\n");
+	Enable_global_interrupt();
 }
 
 void init_eic() {

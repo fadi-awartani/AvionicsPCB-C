@@ -89,6 +89,9 @@
 // From module: Memory Control Access Interface
 #include <ctrl_access.h>
 
+// From module: PDCA - Peripheral DMA Controller
+#include <pdca.h>
+
 // From module: PM Power Manager- UC3 A0/A1/A3/A4/B0/B1 implementation
 #include <power_clocks_lib.h>
 #include <sleep.h>
