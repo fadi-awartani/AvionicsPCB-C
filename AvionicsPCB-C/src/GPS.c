@@ -8,8 +8,8 @@
 #include "nmea/minmea.h"
 #define LINE_BUFF 8
 
-char gps_line[MINMEA_MAX_LENGTH];
-char gps_lines[LINE_BUFF][MINMEA_MAX_LENGTH];
+volatile char gps_line[MINMEA_MAX_LENGTH];
+volatile char gps_lines[LINE_BUFF][MINMEA_MAX_LENGTH];
 int gps_index;
 int dataReady = 0; //booleans
 
@@ -53,11 +53,11 @@ void init_gps() {
 	
 	delay_ms(4);
 	
-	//Turn on every message on every fix.
-	usart_write_line(&GPS_USART, "$PMTK314,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0*28\r\n");
+	//Turn on every supported message on every fix.
+	usart_write_line(&GPS_USART, "$PMTK314,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28\r\n");
 	
 	//Update message rate (and possibly baud rate) to be higher
-	//TODO
+	usart_write_line(&GPS_USART, "$PMTK300,600,0,0,0,0*2B\r\n");
 }
 
 void gps_processChar(char c) {
@@ -72,8 +72,8 @@ void gps_processChar(char c) {
 	gps_line[gps_index++ % (MINMEA_MAX_LENGTH-1)] = c;
 	
 	if(c == '\n') {
-		gps_line[gps_index++ % (MINMEA_MAX_LENGTH-1)] = '\0';
-		strcpy(gps_lines[numlines++ % (LINE_BUFF-1)],gps_line);
+		gps_line[gps_index++ % MINMEA_MAX_LENGTH] = '\0';
+		strcpy(gps_lines[numlines++ % LINE_BUFF],gps_line);
 		gps_index = 0;
 		//prepare_gps_data();
 	}
@@ -102,7 +102,9 @@ int prepare_gps_data_2(char * line) {
 			case MINMEA_SENTENCE_GGA: {
 				struct minmea_sentence_gga frame;
 				if (minmea_parse_gga(&frame, line)) {
+					#ifdef CONFIRM_GPS_MSG
 					usart_write_line(&AVR32_USART0, "\nGOT DATA GGA\n\n");
+					#endif
 					gps_coordinates.lat = minmea_tocoord(&(frame.latitude));
 					gps_coordinates.lon = minmea_tocoord(&(frame.longitude));
 					gps_coordinates.alt = (int) ((frame.altitude.value/((float)frame.altitude.scale)) + 0.5);
@@ -116,7 +118,9 @@ int prepare_gps_data_2(char * line) {
 			case MINMEA_SENTENCE_RMC: {
 				struct minmea_sentence_rmc frame;
 				if (minmea_parse_rmc(&frame, line)) {
+					#ifdef CONFIRM_GPS_MSG
 					usart_write_line(&AVR32_USART0, "\nGOT DATA RMC\n\n");
+					#endif
 					gps_coordinates.lat = minmea_tocoord(&(frame.latitude));
 					gps_coordinates.lon = minmea_tocoord(&(frame.longitude));
 					gps_coordinates.time = minmea_gettime(&(frame.date),&(frame.time));
@@ -130,7 +134,9 @@ int prepare_gps_data_2(char * line) {
 			case MINMEA_SENTENCE_GLL: {
 				struct minmea_sentence_gll frame;
 				if (minmea_parse_rmc(&frame, line)) {
+					#ifdef CONFIRM_GPS_MSG
 					usart_write_line(&AVR32_USART0, "\nGOT DATA GLL\n\n");
+					#endif
 					gps_coordinates.lat = minmea_tocoord(&(frame.latitude));
 					gps_coordinates.lon = minmea_tocoord(&(frame.longitude));
 					gps_coordinates.time = realTime();
@@ -141,7 +147,9 @@ int prepare_gps_data_2(char * line) {
 			case MINMEA_SENTENCE_VTG: {
 				struct minmea_sentence_vtg frame;
 				if (minmea_parse_rmc(&frame, line)) {
+					#ifdef CONFIRM_GPS_MSG
 					usart_write_line(&AVR32_USART0, "\nGOT DATA VTG\n\n");
+					#endif
 					gps_coordinates.speed_kph = frame.speed_kph.value/((float)frame.speed_kph.scale);
 					gps_coordinates.track_degrees = frame.true_track_degrees.value/((float)frame.true_track_degrees.scale);
 					gps_coordinates.speed_time = realTime();
