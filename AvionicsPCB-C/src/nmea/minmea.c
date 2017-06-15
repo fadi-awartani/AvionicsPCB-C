@@ -600,7 +600,7 @@ int minmea_gettime(const struct minmea_date *date, const struct minmea_time *tim
 
     time_t timestamp = mktime(&tim); /* See README.md if your system lacks timegm(). */
     if (timestamp != -1) {
-        return 0;
+        return timestamp;
     } else {
         return -1;
     }

@@ -10,6 +10,8 @@
 #include <asf.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+//#include "conf_sd_mmc_spi.h"
 
 // ---- DEFINES ----
 #define AVR32_PDCA_CHANNEL_SPI_RX 0 
@@ -18,13 +20,12 @@
 #define ENDCHARS "\r\n" //End characters for println.
 //#define GPSLINE_NUMCHARS 128
 #define DISABLE_BMP
-//#define DISABLE_VERBOSE
+#define DISABLE_VERBOSE
 //#define ECHOGPS
 
 // ---- GLOBAL VARIABLES ----
 char gen_string[128];
 long millis_time_linked, real_time_linked; //Link millis() time and real time 
-char sd_initialized = 0;
 volatile char ram_buffer[1000];
 volatile char sd_transmit_buf[256];
 
@@ -49,6 +50,9 @@ typedef struct gps_coordinates_struct {
 	double lon;
 	int alt;
 	long time;
+	float speed_kph;
+	float track_degrees;
+	long speed_time;
 } gps_coordinates_t;
 
 extern void init_gps();

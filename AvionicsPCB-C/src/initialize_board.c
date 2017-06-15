@@ -81,8 +81,8 @@ void init_usarts() {
 		.channelmode  = USART_NORMAL_CHMODE
 	};
 	
-	usart_init_hw_handshaking(&RFD_USART, &USART0_OPTIONS, 24000000);
-	//usart_init_rs232(&RFD_USART, &USART0_OPTIONS, 24000000);
+	//usart_init_hw_handshaking(&RFD_USART, &USART0_OPTIONS, 24000000);
+	usart_init_rs232(&RFD_USART, &USART0_OPTIONS, 24000000);
 	//usart_init_modem(&IRIDIUM_USART, &USART1_OPTIONS, 24000000); //For Iridium. make sure to swap tx/rx pins on board first :(
 	usart_init_rs232(&IRIDIUM_USART, &USART1_OPTIONS, 24000000);
 	usart_init_rs232(&GPS_USART, &USART2_OPTIONS, 24000000);
@@ -281,9 +281,9 @@ static void sd_mmc_resources_init(void)
   // SPI options.
   spi_options_t spiOptions =
   {
-    .reg          = SD_MMC_SPI_NPCS,
-    .baudrate     = SD_MMC_SPI_MASTER_SPEED,  // Defined in conf_sd_mmc_spi.h.
-    .bits         = SD_MMC_SPI_BITS,          // Defined in conf_sd_mmc_spi.h.
+    .reg          = 1,//SD_MMC_SPI_NPCS,
+    .baudrate     = 12000000,//SD_MMC_SPI_MASTER_SPEED,  // Defined in conf_sd_mmc_spi.h.
+    .bits         = 8,//SD_MMC_SPI_BITS,          // Defined in conf_sd_mmc_spi.h.
     .spck_delay   = 0,
     .trans_delay  = 0,
     .stay_act     = 1,
@@ -292,16 +292,23 @@ static void sd_mmc_resources_init(void)
   };
 
   // Initialize as master.
-  spi_initMaster(SD_MMC_SPI, &spiOptions);
+  spi_initMaster(&AVR32_SPI, &spiOptions);
 
   // Set SPI selection mode: variable_ps, pcs_decode, delay.
-  spi_selectionMode(SD_MMC_SPI, 0, 0, 0);
+  spi_selectionMode(&AVR32_SPI, 0, 0, 0);
 
   // Enable SPI module.
-  spi_enable(SD_MMC_SPI);
+  spi_enable(&AVR32_SPI);
 
   // Initialize SD/MMC driver with SPI clock (PBA).
   sd_mmc_spi_init(spiOptions, sysclk_get_pba_hz());
+}
+
+// Software wait
+void wait()
+{
+	volatile int i;
+	for(i = 0 ; i < 5000; i++);
 }
 
 #if defined (__GNUC__)
@@ -325,8 +332,6 @@ static void pdca_int_handler(void)
 
 	// Enable all interrupts.
 	Enable_global_interrupt();
-
-	end_of_transfer = true;
 }
 
 /*! \brief Initialize PDCA (Peripheral DMA Controller A) resources for the SPI transfer and start a dummy transfer
@@ -388,8 +393,8 @@ void initialize_board() {
 	init_usarts();
 	init_pwm();
 	init_watchdog();
-	init_bmp();
-	sd_mmc_resources_init();
+	//init_bmp();
+	//sd_mmc_resources_init();
 	
 	//Initialize interrupt-using modules.
 	INTC_init_interrupts();

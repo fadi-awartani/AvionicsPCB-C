@@ -6,6 +6,7 @@
  */
 #include "main.h"
 //#define DISABLE_MILLIS
+static char is_sd_initialized = 0;
 
 unsigned long tt = 0;
 int main (void) {
@@ -30,7 +31,7 @@ int i = 0;
 	while(1) {
 		
 		#ifndef DISABLE_MILLIS
-		if(millis() > tt + 500) {
+		if(millis() > tt + 5) {
 			tt = millis();
 		} else
 		{
@@ -38,13 +39,18 @@ int i = 0;
 		}
 		#endif
 		
+		prepare_gps_data();
+		
 		if(isDataReady()) {
 			gps_coordinates_t coords = getGPSCoordinates();
-			sprintf(gen_string, "GPS is at %f,%f, %d m high, at time %ld\r\n",
+			sprintf(gen_string, "GPS is at %f,%f, %d m high, at time %ld\r\ngoing %f kph, %f°, at time %lf",
 				coords.lat, 
 				coords.lon,
 				coords.alt,
-				coords.time);
+				coords.time,
+				coords.speed_kph,
+				coords.track_degrees,
+				coords.speed_time);
 			usart_write_line(&RFD_USART, gen_string);
 			
 			#ifdef EN_USB
@@ -53,16 +59,17 @@ int i = 0;
 		}
 		
 		//gpio_tgl_gpio_pin(BLUE_LED_PIN);
+		if(i % 100 == 0)
 		gpio_tgl_gpio_pin(RED_LED_PIN);
 		
 		#ifdef EN_USB
 		print_usb_debug(i);
 		#endif
 		
-		if(i % 2 == 0) {
+		if(i % 200 == 0) {
 			//pwm_start_channels(1 << BUZZER_PWM);
 			pwm_start_channels(1 << BLUE_LED_PWM);
-		} else {
+		} else if(i % 100 == 0){
 			//pwm_stop_channels(1 << BUZZER_PWM);
 			pwm_stop_channels(1 << BLUE_LED_PWM);
 		}
@@ -79,12 +86,12 @@ int i = 0;
 			;//usart_write_line(&AVR32_USART0, "There was an I2C error.\n");*/
 		
 		if(gpio_pin_is_high(SD_DETECT_PIN)) {
-			if(!sd_initialized) {
+			if(!is_sd_initialized) {
 				sd_pdca_init();
 			}
 		}
 		
-		if(sd_initialized) {
+		if(is_sd_initialized) {
 			//Log data
 		}
 		
