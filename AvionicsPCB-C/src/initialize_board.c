@@ -54,7 +54,11 @@ void init_usarts() {
 	//RFD900
 	static const usart_options_t USART0_OPTIONS =
 	{
+		#ifdef IS_SECOND_BOARD
+		.baudrate     = 19200,
+		#else
 		.baudrate     = 38400,
+		#endif
 		.charlength   = 8,
 		.paritytype   = USART_NO_PARITY,
 		.stopbits     = USART_1_STOPBIT,
@@ -84,8 +88,10 @@ void init_usarts() {
 	//usart_init_hw_handshaking(&RFD_USART, &USART0_OPTIONS, 24000000);
 	usart_init_rs232(&RFD_USART, &USART0_OPTIONS, 24000000);
 	//usart_init_modem(&IRIDIUM_USART, &USART1_OPTIONS, 24000000); //For Iridium. make sure to swap tx/rx pins on board first :(
-	usart_init_rs232(&IRIDIUM_USART, &USART1_OPTIONS, 24000000);
-	usart_init_rs232(&GPS_USART, &USART2_OPTIONS, 24000000);
+	#ifndef IS_SECOND_BOARD
+		usart_init_rs232(&IRIDIUM_USART, &USART1_OPTIONS, 24000000);
+		usart_init_rs232(&GPS_USART, &USART2_OPTIONS, 24000000);
+	#endif
 }
 
 // I2C init
@@ -393,13 +399,17 @@ void initialize_board() {
 	init_usarts();
 	init_pwm();
 	init_watchdog();
-	//init_bmp();
+	#ifndef DISABLE_BMP
+	init_bmp();
+	#endif
 	//sd_mmc_resources_init();
 	
 	//Initialize interrupt-using modules.
 	INTC_init_interrupts();
 	init_eic();
+	#ifndef IS_SECOND_BOARD
 	init_gps();
+	#endif
 	init_tc();
 	
 	cpu_irq_enable();

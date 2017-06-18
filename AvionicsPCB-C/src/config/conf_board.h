@@ -56,10 +56,16 @@
 #define BUZZER_PWM				2
 
 // USARTs
-#define RFD_USART				AVR32_USART0
+#ifndef IS_SECOND_BOARD
+	#define RFD_USART			AVR32_USART0
+	#define RFD_USART_IRQ		AVR32_USART0_IRQ
+#else
+	#define RFD_USART			AVR32_USART1
+	#define RFD_USART_IRQ		AVR32_USART1_IRQ
+#endif
+
 #define IRIDIUM_USART			AVR32_USART1
 #define GPS_USART				AVR32_USART2
-//#define GPS_USART				AVR32_USART1 //CHANGE BACK!!! Todo
 #define GPS_USART_IRQ			AVR32_USART2_IRQ //match to GPS_USART
 
 // I2C Configuration
