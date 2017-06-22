@@ -28,7 +28,8 @@ static void button1_interrupt(void)
 	lastPressed[0] = millis();
 	
 	//turnOnGPS();
-	pwm_start_channels(1 << BUZZER_PWM);
+	//pwm_start_channels(1 << BUZZER_PWM);
+	writeFusebit(GOFAST_BIT);
 	
 	usart_write_line(&GPS_USART, "$PMTK314,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28\r\n");
 	Enable_global_interrupt();
@@ -52,7 +53,7 @@ static void button2_interrupt(void)
 	pwm_stop_channels(1 << BUZZER_PWM);
 	gpio_tgl_gpio_pin(RED_LED_PIN);
 	
-	usart_write_line(&GPS_USART, "$PMTK300,500,0,0,0,0*28\r\n");
+	eraseFusebit(GOFAST_BIT);
 	Enable_global_interrupt();
 }
 

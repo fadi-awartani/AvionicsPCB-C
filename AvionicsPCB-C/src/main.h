@@ -19,10 +19,11 @@
 //#define EN_USB
 #define ENDCHARS "\r\n" //End characters for println.
 //#define GPSLINE_NUMCHARS 128
-//#define DISABLE_BMP
+#define DISABLE_BMP
 #define DISABLE_VERBOSE
+//#define SD_ENABLE
 //#define ECHOGPS
-#define IS_SECOND_BOARD
+//#define IS_SECOND_BOARD
 
 // ---- GLOBAL VARIABLES ----
 char gen_string[128];
@@ -30,6 +31,7 @@ long millis_time_linked, real_time_linked; //Link millis() time and real time
 volatile char ram_buffer[1000];
 volatile char sd_transmit_buf[256];
 unsigned char txbytes[40];
+
 
 // ---- GENERAL FUNCTIONS ----
 extern void initialize_board();
@@ -42,6 +44,12 @@ uint64_t hash(unsigned char *str);
 extern void print_usb_debug(char* message);
 extern void println_usb_debug(char* message);
 #endif
+
+// ---- FUSE BITS ----
+extern void writeFusebit(int n);
+extern void eraseFusebit(int n);
+extern int readFusebit(int n);
+#define GOFAST_BIT 31
 
 // ---- I2C ----
 extern int send_i2c_bytes(uint8_t device_address, uint8_t internal_address, uint8_t *data_bytes, int len);

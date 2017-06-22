@@ -108,6 +108,10 @@ int prepare_gps_data_2(char * line) {
 					gps_coordinates.lat = minmea_tocoord(&(frame.latitude));
 					gps_coordinates.lon = minmea_tocoord(&(frame.longitude));
 					gps_coordinates.alt = (int) ((frame.altitude.value/((float)frame.altitude.scale)) + 0.5);
+					
+					if(gps_coordinates.alt > 1750)
+						writeFusebit(GOFAST_BIT);
+						
 					gps_coordinates.time = realTime();
 					
 					gps_nsatts = frame.satellites_tracked;

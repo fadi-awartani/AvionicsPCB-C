@@ -6,9 +6,13 @@
  */
 #include "main.h"
 //#define DISABLE_MILLIS
+
+#ifdef SD_ENABLE
 static char is_sd_initialized = 0;
+#endif
 
 unsigned long tt = 0;
+int gps_ready_count = 0;
 int main (void) {
 	// System Init
 	sysclk_init();
@@ -45,21 +49,20 @@ int i = 0, count_gps;
 		
 		prepare_gps_data();
 		
-		if(isDataReady()) {
+		int gofast = !readFusebit(GOFAST_BIT);
+		if((!gofast && isDataReady() && gps_ready_count++ % 10 == 0) || (gofast && i % 5 == 0)) {
 			gps_coordinates_t coords = getGPSCoordinates();
 			
-			writeDataSen(txbytes,coords);
-			usart_write_line(&RFD_USART, txbytes);
+			//writeDataSen(txbytes,coords);
+			//usart_write_line(&RFD_USART, txbytes);
 			
-			if(count_gps++ % 5 == 0) {
-				sprintf(gen_string, "GPS is at %f,%f, %d m high, at time %ld: going %f kph, %f°, at time %lf",
+			//if(count_gps++ % 4 == 0) {
+			{
+				sprintf(gen_string, "GPS is at %f,%f, %d m high, at time %ld.\n",
 					coords.lat,
 					coords.lon,
 					coords.alt,
-					coords.time,
-					coords.speed_kph,
-					coords.track_degrees,
-					coords.speed_time);
+					coords.time);
 				usart_write_line(&RFD_USART, gen_string);
 			}
 			
@@ -69,9 +72,9 @@ int i = 0, count_gps;
 		}
 		
 		//Read from payload at 4Hz.
-		if(i % 50 == 0 && read_i2c_bytes_no_addr(PAYLOAD_I2C_ADDR, gen_string, 12)) {
-			usart_write_line(&RFD_USART, gen_string);
-		}
+		//if(i % 50 == 0 && read_i2c_bytes_no_addr(PAYLOAD_I2C_ADDR, gen_string, 12)) {
+		//	usart_write_line(&RFD_USART, gen_string);
+		//}
 		
 		//gpio_tgl_gpio_pin(BLUE_LED_PIN);
 		if(i % 100 == 0)
@@ -98,6 +101,7 @@ int i = 0, count_gps;
 		} else
 			;//usart_write_line(&AVR32_USART0, "There was an I2C error.\n");*/
 		
+		#ifdef SD_ENABLE
 		if(gpio_pin_is_high(SD_DETECT_PIN)) {
 			if(!is_sd_initialized) {
 				sd_pdca_init();
@@ -107,6 +111,7 @@ int i = 0, count_gps;
 		if(is_sd_initialized) {
 			//Log data
 		}
+		#endif
 		
 		#ifndef DISABLE_BMP
 		altimeter_data_t alt_data = readAltimeter();

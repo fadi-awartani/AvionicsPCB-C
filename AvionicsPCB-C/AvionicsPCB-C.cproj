@@ -578,6 +578,9 @@
     <Compile Include="src\external_interrupts_buttons.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\fuse_bits.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\GPS.c">
       <SubType>compile</SubType>
     </Compile>

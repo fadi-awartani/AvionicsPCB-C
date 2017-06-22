@@ -14,7 +14,7 @@ void init_gpio() {
 	/*
 		--PORT A--
 		GPER: -32- 0011 0000 0011 0010
-			       0000 0000 0000 0000 -0- == 0x30320000
+			       0001 1000 0000 0000 -0- == 0x30321800
 			-Enables GPIO function for corresponding pin.
 				   
 		PMR0: -32- 0000 1100 0000 0000
@@ -37,7 +37,7 @@ void init_gpio() {
 	volatile avr32_gpio_port_t *gpio_portA = &AVR32_GPIO.port[0];
 	volatile avr32_gpio_port_t *gpio_portB = &AVR32_GPIO.port[1];
 	
-	gpio_portA->gper = 0x30320000UL;
+	gpio_portA->gper = 0x30321800UL;
 	gpio_portA->pmr0 = 0x0C002000UL;
 	gpio_portA->pmr1 = 0x1E0;
 	gpio_portA->puers = 0x600;//Enable pullup on I2C lines XXand GPS battery backupXX
@@ -89,7 +89,7 @@ void init_usarts() {
 	usart_init_rs232(&RFD_USART, &USART0_OPTIONS, 24000000);
 	//usart_init_modem(&IRIDIUM_USART, &USART1_OPTIONS, 24000000); //For Iridium. make sure to swap tx/rx pins on board first :(
 	#ifndef IS_SECOND_BOARD
-		usart_init_rs232(&IRIDIUM_USART, &USART1_OPTIONS, 24000000);
+		//usart_init_rs232(&IRIDIUM_USART, &USART1_OPTIONS, 24000000);
 		usart_init_rs232(&GPS_USART, &USART2_OPTIONS, 24000000);
 	#endif
 }
@@ -381,6 +381,42 @@ void sd_pdca_init(void)
 
 }
 
+#if __GNUC__
+__attribute__((__interrupt__))
+#elif __ICCAVR32__
+__interrupt
+#endif
+static void got_rfd_byte(void) {
+	Disable_global_interrupt();
+	int val;
+	char c;
+	
+	usart_read_char(&RFD_USART, &val);
+	
+	c = (char) val;
+	//do
+	
+	if(c == 'S') {
+		writeFusebit(GOFAST_BIT);	
+		//pwm_start_channels(1 << BUZZER_PWM);
+	}
+	
+	Enable_global_interrupt();
+	
+	RFD_USART.idr = 1;
+	RFD_USART.ier = 1;
+}
+
+void init_rfd_receive() {
+	Disable_global_interrupt();
+		
+	INTC_register_interrupt(&got_rfd_byte, RFD_USART_IRQ, AVR32_INTC_INT0);
+	
+	GPS_USART.ier = AVR32_USART_IER_RXRDY_MASK;
+		
+	Enable_global_interrupt();
+}
+
 uint64_t millis() {
 	return millis_value;
 }
@@ -410,6 +446,7 @@ void initialize_board() {
 	#ifndef IS_SECOND_BOARD
 	init_gps();
 	#endif
+	init_rfd_receive();
 	init_tc();
 	
 	cpu_irq_enable();
