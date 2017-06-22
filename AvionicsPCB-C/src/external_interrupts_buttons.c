@@ -31,7 +31,7 @@ static void button1_interrupt(void)
 	//pwm_start_channels(1 << BUZZER_PWM);
 	writeFusebit(GOFAST_BIT);
 	
-	usart_write_line(&GPS_USART, "$PMTK314,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28\r\n");
+	//usart_write_line(&GPS_USART, "$PMTK314,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28\r\n");
 	Enable_global_interrupt();
 }
 

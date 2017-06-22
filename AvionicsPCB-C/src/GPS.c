@@ -127,10 +127,11 @@ int prepare_gps_data_2(char * line) {
 					#endif
 					gps_coordinates.lat = minmea_tocoord(&(frame.latitude));
 					gps_coordinates.lon = minmea_tocoord(&(frame.longitude));
-					gps_coordinates.time = minmea_gettime(&(frame.date),&(frame.time));
 					
 					millis_time_linked = millis();
-					real_time_linked = gps_coordinates.time;
+					real_time_linked = minmea_gettime(&(frame.date),&(frame.time));
+					
+					gps_coordinates.time = realTime();
 					dataReady = 1;
 				}
 			} break;

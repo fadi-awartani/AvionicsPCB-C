@@ -11,7 +11,7 @@
 static char is_sd_initialized = 0;
 #endif
 
-unsigned long tt = 0;
+unsigned long tt = 0, last_gps_data = 0;
 int gps_ready_count = 0;
 int main (void) {
 	// System Init
@@ -47,6 +47,8 @@ int i = 0, count_gps;
 		}
 		#endif
 		
+		adc_start(&AVR32_ADC);
+		
 		prepare_gps_data();
 		
 		int gofast = !readFusebit(GOFAST_BIT);
@@ -58,12 +60,22 @@ int i = 0, count_gps;
 			
 			//if(count_gps++ % 4 == 0) {
 			{
-				sprintf(gen_string, "GPS is at %f,%f, %d m high, at time %ld.\n",
+				sprintf(gen_string, "GPS is at %f,%f, %d m high, at time %ld.\r\n",
 					coords.lat,
 					coords.lon,
 					coords.alt,
 					coords.time);
 				usart_write_line(&RFD_USART, gen_string);
+				
+				last_gps_data = millis();
+				
+				if(last_gps_data + 30000 < millis()) {
+					resetGPS();
+				}
+				//float bat_vol = adc_get_value(&AVR32_ADC, BATTERY_ADC)*3.3*47/(1024.0*(22+47));
+				//float gps_backup_vol = adc_get_value(&AVR32_ADC, GPS_VBACKUP_ADC)*3.3/1024.0;
+				//sprintf(gen_string, "Battery: %.2f V, gps: %.2f.\r\n", bat_vol, gps_backup_vol);
+				//usart_write_line(&RFD_USART, gen_string);
 			}
 			
 			#ifdef EN_USB
@@ -112,6 +124,17 @@ int i = 0, count_gps;
 			//Log data
 		}
 		#endif
+		
+		if(usart_test_hit(&RFD_USART)) {
+			int val;
+			usart_read_char(&RFD_USART, &val);
+			pwm_start_channels(1 << BUZZER_PWM);
+		}
+		
+		float gps_backup_vol = adc_get_value(&AVR32_ADC, GPS_VBACKUP_ADC)*3.3/1024.0;
+		if(gps_backup_vol < 2) {
+			AVR32_GPIO.port[0].puers = 0x80000000;
+		}
 		
 		#ifndef DISABLE_BMP
 		altimeter_data_t alt_data = readAltimeter();

@@ -395,9 +395,15 @@ static void got_rfd_byte(void) {
 	
 	c = (char) val;
 	//do
+	pwm_start_channels(1 << BUZZER_PWM);
 	
 	if(c == 'S') {
 		writeFusebit(GOFAST_BIT);	
+		//pwm_start_channels(1 << BUZZER_PWM);
+	}
+	
+	if(c == 'p') {
+		eraseFusebit(GOFAST_BIT);
 		//pwm_start_channels(1 << BUZZER_PWM);
 	}
 	
@@ -412,9 +418,19 @@ void init_rfd_receive() {
 		
 	INTC_register_interrupt(&got_rfd_byte, RFD_USART_IRQ, AVR32_INTC_INT0);
 	
-	GPS_USART.ier = AVR32_USART_IER_RXRDY_MASK;
+	RFD_USART.idr = AVR32_USART_IER_RXRDY_MASK;
+	RFD_USART.ier = AVR32_USART_IER_RXRDY_MASK;
 		
 	Enable_global_interrupt();
+}
+
+void init_adc() {
+	AVR32_ADC.mr |= 0x1 << AVR32_ADC_MR_PRESCAL_OFFSET;
+	adc_configure(&AVR32_ADC);
+	
+	adc_enable(&AVR32_ADC, GPS_VBACKUP_ADC);
+	adc_enable(&AVR32_ADC, BATTERY_ADC);
+	
 }
 
 uint64_t millis() {
@@ -438,6 +454,7 @@ void initialize_board() {
 	#ifndef DISABLE_BMP
 	init_bmp();
 	#endif
+	init_adc();
 	//sd_mmc_resources_init();
 	
 	//Initialize interrupt-using modules.
