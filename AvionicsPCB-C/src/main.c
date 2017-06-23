@@ -83,10 +83,26 @@ int i = 0, count_gps;
 			#endif
 		}
 		
-		//Read from payload at 4Hz.
-		//if(i % 50 == 0 && read_i2c_bytes_no_addr(PAYLOAD_I2C_ADDR, gen_string, 12)) {
-		//	usart_write_line(&RFD_USART, gen_string);
-		//}
+		#ifdef PAYLOAD_ENABLE
+		//Read from payload at 14Hz.
+		char rxd[4];
+		if(i % 29 == 0 && read_i2c_bytes_no_addr(PAYLOAD_I2C_ADDR, rxd, 4)) {
+			payload_nums[payload_count][0] = ((int)rxd[1] << 8)|((int)rxd[0]);
+			payload_nums[payload_count][1] = ((int)rxd[3] << 8)|((int)rxd[2]);
+			payload_count = (payload_count+1) % 7;
+			if(payload_count == 0) { 
+				sprintf(gen_string, "Payload:%d,%d:%d,%d:%d,%d:%d,%d:%d,%d:%d,%d:%d,%d\r\n", 
+				payload_nums[0][0], payload_nums[0][1],
+				payload_nums[1][0], payload_nums[1][1],
+				payload_nums[2][0], payload_nums[2][1],
+				payload_nums[3][0], payload_nums[3][1],
+				payload_nums[4][0], payload_nums[4][1],
+				payload_nums[5][0], payload_nums[5][1],
+				payload_nums[6][0], payload_nums[6][1]);
+				usart_write_line(&RFD_USART, gen_string);
+			}
+		}
+		#endif
 		
 		//gpio_tgl_gpio_pin(BLUE_LED_PIN);
 		if(i % 100 == 0)
@@ -114,10 +130,8 @@ int i = 0, count_gps;
 			;//usart_write_line(&AVR32_USART0, "There was an I2C error.\n");*/
 		
 		#ifdef SD_ENABLE
-		if(gpio_pin_is_high(SD_DETECT_PIN)) {
-			if(!is_sd_initialized) {
-				sd_pdca_init();
-			}
+		if(!is_sd_initialized && gpio_pin_is_high(SD_DETECT_PIN)) {
+			sd_pdca_init();
 		}
 		
 		if(is_sd_initialized) {
@@ -135,6 +149,9 @@ int i = 0, count_gps;
 		if(gps_backup_vol < 2) {
 			AVR32_GPIO.port[0].puers = 0x80000000;
 		}
+		
+		if(!gofast && millis() > 4500000)
+			writeFusebit(GOFAST_BIT);
 		
 		#ifndef DISABLE_BMP
 		altimeter_data_t alt_data = readAltimeter();

@@ -24,11 +24,15 @@
 //#define SD_ENABLE
 //#define ECHOGPS
 //#define IS_SECOND_BOARD
+//#define PAYLOAD_ENABLE
 
 // ---- GLOBAL VARIABLES ----
 char gen_string[128];
+#ifdef PAYLOAD_ENABLE
+int16_t payload_nums[7][2];
+int payload_count;
+#endif
 long millis_time_linked, real_time_linked; //Link millis() time and real time 
-volatile char ram_buffer[1000];
 volatile char sd_transmit_buf[256];
 unsigned char txbytes[40];
 
@@ -77,6 +81,7 @@ extern void resetGPS();
 
 // ---- SD CARD ----
 extern void sd_pdca_init();
+extern void sd_mmc_resources_init(void);
 
 // ---- BMP280 ALTIMETER ----
 typedef struct altimeter_data_struct {
